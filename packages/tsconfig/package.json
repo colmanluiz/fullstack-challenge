@@ -1,5 +1,8 @@
 {
   "name": "@task-management/tsconfig",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "files": [
+    "base.json"
+  ]
 }

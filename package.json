@@ -12,13 +12,9 @@
     "type-check": "turbo run type-check"
   },
   "devDependencies": {
-    "turbo": "^1.10.16",
-    "@types/node": "^20.8.0",
-    "typescript": "^5.2.2"
+    "@types/node": "^24.3.1",
+    "turbo": "latest",
+    "typescript": "^5.9.2"
   },
-  "packageManager": "pnpm@10.15.0",
-  "engines": {
-    "node": ">=18",
-    "pnpm": ">=8"
-  }
+  "packageManager": "pnpm@10.15.0"
 }
