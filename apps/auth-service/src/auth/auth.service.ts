@@ -2,11 +2,12 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { JwtService } from "@nestjs/jwt";
 import { RefreshToken, User } from "src/entities";
-import { Repository } from "typeorm";
+import { MoreThan, Repository } from "typeorm";
 import { LoginDto } from "./dto/login.dto";
 import { AuthResponseDto } from "./dto/auth-response.dto";
 import * as bcrypt from "bcryptjs";
 import crypto from "node:crypto";
+import { RegisterDto } from "./dto/register.dto";
 
 @Injectable()
 export class AuthService {
@@ -37,6 +38,56 @@ export class AuthService {
 
     if (!isPasswordValid) {
       throw new UnauthorizedException(`Invalid email or password`);
+    }
+
+    return this.generateAuthResponse(user);
+  }
+
+  async registerUser(registerDto: RegisterDto): Promise<AuthResponseDto> {
+    const { email, username, password } = registerDto;
+
+    const user = await this.userRepository.findOne({
+      where: {
+        email,
+      },
+    });
+    if (user) {
+      throw new UnauthorizedException("A user with this email already exists.");
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+
+    const newUser = this.userRepository.create({
+      email,
+      username,
+      password: hashedPassword,
+    });
+
+    await this.userRepository.save(newUser);
+    return this.generateAuthResponse(newUser);
+  }
+
+  async validateRefreshToken(refreshToken: string): Promise<AuthResponseDto> {
+    const refreshTokenExists = await this.refreshTokenRepository.findOne({
+      where: {
+        token: refreshToken,
+        isRevoked: false,
+        expiresAt: MoreThan(new Date()),
+      },
+    });
+
+    if (!refreshTokenExists) {
+      throw new UnauthorizedException("Invalid or expired refresh token");
+    }
+
+    const user = await this.userRepository.findOne({
+      where: {
+        id: refreshTokenExists.userId,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException("User not found");
     }
 
     return this.generateAuthResponse(user);
@@ -85,5 +136,10 @@ export class AuthService {
 
   private generateRefreshToken(): string {
     return crypto.randomBytes(32).toString("hex");
+  }
+
+  private hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
   }
 }
