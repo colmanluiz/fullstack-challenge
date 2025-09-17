@@ -1,7 +1,12 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { firstValueFrom } from "rxjs";
-import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponseDto } from "@task-management/types";
+import {
+  LoginDto,
+  RegisterDto,
+  RefreshTokenDto,
+  AuthResponseDto,
+} from "@task-management/types";
 
 @Injectable()
 export class AuthService {
