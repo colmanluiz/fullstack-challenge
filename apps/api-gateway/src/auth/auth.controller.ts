@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginDto, RefreshTokenDto, RegisterDto, AuthResponseDto } from "@task-management/types";
 import {
@@ -8,6 +8,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { JwtAuthGuard } from "../guards/auth/jwt-auth.guard";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -42,7 +43,9 @@ export class AuthController {
     return await this.authService.register(registerDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post("refresh")
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Refresh authentication token" })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({
@@ -50,13 +53,16 @@ export class AuthController {
     description: "Token refreshed successfully",
     type: AuthResponseDto,
   })
+  @ApiResponse({ status: 401, description: "Unauthorized - Invalid or missing JWT token" })
   @ApiResponse({ status: 400, description: "Invalid refresh token" })
   @ApiResponse({ status: 429, description: "Too many requests" })
   async refresh(@Body() refreshDto: RefreshTokenDto) {
     return await this.authService.refresh(refreshDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post("logout")
+  @ApiBearerAuth()
   @ApiOperation({ summary: "User logout" })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({
@@ -69,6 +75,7 @@ export class AuthController {
       }
     }
   })
+  @ApiResponse({ status: 401, description: "Unauthorized - Invalid or missing JWT token" })
   @ApiResponse({ status: 400, description: "Invalid refresh token" })
   @ApiResponse({ status: 429, description: "Too many requests" })
   async logout(@Body() refreshDto: RefreshTokenDto) {
