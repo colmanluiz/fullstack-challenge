@@ -93,6 +93,30 @@ export class AuthService {
     return this.generateAuthResponse(user);
   }
 
+  async validateAccessToken(token: string): Promise<any> {
+    try {
+      const payload = this.jwtService.verify(token);
+      return payload;
+    } catch (error) {
+      throw new UnauthorizedException("Invalid or expired access token");
+    }
+  }
+
+  async revokeRefreshToken(token: string): Promise<any> {
+    const isToken = await this.refreshTokenRepository.findOne({
+      where: { token },
+    });
+
+    if (!isToken) {
+      throw new UnauthorizedException("Invalid or expired refresh token");
+    }
+
+    isToken.isRevoked = true;
+    await this.refreshTokenRepository.save(isToken);
+
+    return { success: true };
+  }
+
   private async generateAuthResponse(user: User): Promise<AuthResponseDto> {
     const accessToken = this.generateAccessToken(user);
     if (!accessToken) {
