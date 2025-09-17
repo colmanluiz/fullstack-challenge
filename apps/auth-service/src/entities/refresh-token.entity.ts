@@ -3,14 +3,14 @@ import { User } from './user.entity';
 
 @Entity('refresh_tokens')
 export class RefreshToken {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   token: string; // The actual refresh token
 
   @Column()
-  userId: number;
+  userId: string;
 
   @Column()
   expiresAt: Date;
