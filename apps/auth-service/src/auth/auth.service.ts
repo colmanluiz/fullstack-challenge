@@ -13,12 +13,12 @@ import { RegisterDto } from "./dto/register.dto";
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
 
     @InjectRepository(RefreshToken)
-    private refreshTokenRepository: Repository<RefreshToken>,
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
 
-    private jwtService: JwtService
+    private readonly jwtService: JwtService
   ) {}
 
   async loginUser(loginDto: LoginDto): Promise<AuthResponseDto> {
@@ -67,10 +67,15 @@ export class AuthService {
     return this.generateAuthResponse(newUser);
   }
 
-  async validateRefreshToken(refreshToken: string): Promise<AuthResponseDto> {
+  async logout(refreshToken: string): Promise<{ message: string }> {
+    await this.revokeRefreshToken(refreshToken);
+    return { message: "Logged out successfully" };
+  }
+
+  async validateRefreshToken(token: string): Promise<AuthResponseDto> {
     const refreshTokenExists = await this.refreshTokenRepository.findOne({
       where: {
-        token: refreshToken,
+        token: token,
         isRevoked: false,
         expiresAt: MoreThan(new Date()),
       },
