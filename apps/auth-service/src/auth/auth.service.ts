@@ -6,7 +6,7 @@ import { MoreThan, Repository } from "typeorm";
 import { LoginDto } from "./dto/login.dto";
 import { AuthResponseDto } from "./dto/auth-response.dto";
 import * as bcrypt from "bcryptjs";
-import crypto from "node:crypto";
+import * as crypto from "node:crypto";
 import { RegisterDto } from "./dto/register.dto";
 
 @Injectable()
