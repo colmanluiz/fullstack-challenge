@@ -3,11 +3,9 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { JwtService } from "@nestjs/jwt";
 import { RefreshToken, User } from "src/entities";
 import { MoreThan, Repository } from "typeorm";
-import { LoginDto } from "./dto/login.dto";
-import { AuthResponseDto } from "./dto/auth-response.dto";
+import { LoginDto, AuthResponseDto, RegisterDto } from "@task-management/types";
 import * as bcrypt from "bcryptjs";
-import * as crypto from "node:crypto";
-import { RegisterDto } from "./dto/register.dto";
+import * as crypto from "crypto";
 
 @Injectable()
 export class AuthService {

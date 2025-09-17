@@ -1,8 +1,6 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { LoginDto } from "./dto/login.dto";
-import { RegisterDto } from "./dto/register.dto";
-import { RefreshTokenDto } from "./dto/refresh.dto";
+import { LoginDto, RegisterDto, RefreshTokenDto } from "@task-management/types";
 
 @Controller("auth")
 export class AuthController {
