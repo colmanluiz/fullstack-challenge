@@ -3,9 +3,13 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { TaskAssignment } from "./task-assignment.entity";
+import { TaskHistory } from "./task-history.entity";
+import { Comment } from "./comment.entity";
 
 export enum TaskPriority {
   LOW = "low",
@@ -50,8 +54,12 @@ export class Task {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // @JoinColumn({ name: 'createdBy' })
-  // Relation to User entity can be added here if needed
-  // @ManyToOne(() => User, (user) => user.tasks, { onDelete: 'CASCADE' })
-  // user: User;
+  @OneToMany(() => Comment, (comment) => comment.task)
+  comments: Comment[];
+
+  @OneToMany(() => TaskAssignment, (assignment) => assignment.task)
+  assignments: TaskAssignment[];
+
+  @OneToMany(() => TaskHistory, (history) => history.task)
+  history: TaskHistory[];
 }
