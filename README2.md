@@ -116,21 +116,29 @@ Uma aplicação completa de gerenciamento de tarefas colaborativo construída co
 - ❌ Maior overhead comparado a guards customizados
 - ❌ Dependência adicional
 
-### 4. **UUID como Primary Keys**
+### 4. **UUID como Primary Keys para Tasks**
 
-**Decisão:** Usar UUIDs em vez de auto-increment integers.
+**Decisão:** Usar UUIDs em vez de auto-increment integers nas entidades do Tasks Service.
 
 **Vantagens:**
 
-- ✅ Segurança aprimorada (não-sequencial)
-- ✅ Prevenção de enumeration attacks
-- ✅ Fácil distribuição entre microserviços
-- ✅ Sem conflitos de ID entre bancos
+- ✅ **Segurança aprimorada** (não-sequencial, previne enumeration attacks)
+- ✅ **Consistência arquitetural** (Auth Service já usa UUIDs)
+- ✅ **Microserviços** - fácil distribuição, sem conflitos de ID
+- ✅ **Privacidade** - usuários não podem descobrir quantidade de tasks
+- ✅ **Foreign Key consistency** - referências para User (UUID) já estabelecidas
 
 **Trade-offs:**
 
-- ❌ Maior uso de espaço em disco
-- ❌ Performance ligeiramente inferior em índices
+- ❌ **Performance** - maior uso de espaço (16 bytes vs 4-8 bytes)
+- ❌ **UX** - URLs menos amigáveis, sem referência humana ("Task #1234")
+- ❌ **Debugging** - mais difícil trabalhar durante desenvolvimento
+- ❌ **Indexação** - performance ligeiramente inferior para índices grandes
+
+**Alternativa Considerada:**
+
+- Sistema híbrido: UUID como PK + campo `taskNumber` auto-incrementing para referência humana
+- **Decisão Final:** Manter apenas UUIDs por consistência e segurança no contexto do desafio
 
 ### 5. **Rate Limiting Global**
 
@@ -183,10 +191,19 @@ POST /api/auth/logout      # Logout (protegido)
 
 #### Tasks Service
 
-- Estrutura básica criada
-- Entities em desenvolvimento (Task.entity.ts aberto no IDE)
-- CRUD operations pendentes
-- RabbitMQ integration pendente
+- ✅ **Estrutura básica** criada (NestJS microservice + TCP transport)
+- ✅ **Entities completas** com TypeORM relationships:
+  - `Task` - título, descrição, prazo, prioridade, status, createdBy
+  - `Comment` - taskId, authorId, content, timestamps
+  - `TaskAssignment` - taskId, userId, assignedAt (many-to-many)
+  - `TaskHistory` - taskId, userId, action, previousValue, newValue (audit log)
+- ✅ **Relacionamentos TypeORM** implementados:
+  - Task ←→ Comments (OneToMany/ManyToOne)
+  - Task ←→ TaskAssignments (OneToMany/ManyToOne)
+  - Task ←→ TaskHistory (OneToMany/ManyToOne)
+  - Cascade deletion configurado
+- 🚧 **CRUD operations** pendentes
+- 🚧 **RabbitMQ integration** pendente
 
 #### Frontend
 
