@@ -26,6 +26,7 @@
     "@nestjs/microservices": "^10.4.20",
     "@nestjs/platform-express": "^10.4.20",
     "@nestjs/typeorm": "^10.0.2",
+    "@task-management/exceptions": "workspace:*",
     "@task-management/types": "workspace:*",
     "@task-management/utils": "workspace:*",
     "amqplib": "^0.10.9",
