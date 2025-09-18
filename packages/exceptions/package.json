@@ -1,0 +1,29 @@
+{
+  "name": "@task-management/exceptions",
+  "version": "0.0.1",
+  "description": "Shared exception classes for task management microservices",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0"
+  },
+  "devDependencies": {
+    "@task-management/eslint-config": "workspace:*",
+    "@task-management/tsconfig": "workspace:*",
+    "@types/node": "^20.3.1",
+    "typescript": "^5.1.3"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}
