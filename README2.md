@@ -140,7 +140,46 @@ Uma aplicação completa de gerenciamento de tarefas colaborativo construída co
 - Sistema híbrido: UUID como PK + campo `taskNumber` auto-incrementing para referência humana
 - **Decisão Final:** Manter apenas UUIDs por consistência e segurança no contexto do desafio
 
-### 5. **Rate Limiting Global**
+### 5. **Shared Exception Pattern**
+
+**Decisão:** Criar classe `Exception` abstrata dentro de packages/ `@task-management/exceptions`.
+
+**Vantagens:**
+
+- ✅ **Consistência cross-service** - padrão uniforme de erros entre todos os microserviços
+- ✅ **Separação Internal/External** - mensagens internas para logs, externas para API responses
+- ✅ **Monorepo best practices** - reutilização de código via workspace packages
+- ✅ **Debugging aprimorado** - metadados consistentes (timestamp, context, statusCode)
+- ✅ **Security by design** - evita vazamento de informações internas para clientes
+- ✅ **Maintainability** - mudanças centralizadas beneficiam todos os serviços
+
+**Implementação:**
+
+```typescript
+export class Exception extends Error {
+  public readonly internalMessage: string; // Para logs
+  public readonly externalMessage: string; // Para clientes
+  public readonly statusCode: number;
+  public readonly context: string;
+  public readonly timestamp: Date;
+}
+```
+
+**Exemplo de Uso:**
+
+```typescript
+// TaskNotFoundException extends Exception
+throw new TaskNotFoundException(taskId);
+// Result: Internal: "Task with ID uuid not found in database"
+//         External: "Task not found"
+```
+
+**Trade-offs:**
+
+- ❌ **Overhead mínimo** - classe adicional vs exceptions nativas
+- ❌ **Learning curve** - desenvolvedores precisam seguir o padrão
+
+### 6. **Rate Limiting Global**
 
 **Decisão:** Implementar rate limiting (10 req/sec) no API Gateway.
 
@@ -202,6 +241,11 @@ POST /api/auth/logout      # Logout (protegido)
   - Task ←→ TaskAssignments (OneToMany/ManyToOne)
   - Task ←→ TaskHistory (OneToMany/ManyToOne)
   - Cascade deletion configurado
+- ✅ **Shared Exception Pattern** implementado:
+  - Pacote `@task-management/exceptions` criado
+  - Classe base `Exception` com internal/external messages
+  - `TaskNotFoundException` implementada como exemplo
+  - Integração com o Turborepo
 - 🚧 **CRUD operations** pendentes
 - 🚧 **RabbitMQ integration** pendente
 
