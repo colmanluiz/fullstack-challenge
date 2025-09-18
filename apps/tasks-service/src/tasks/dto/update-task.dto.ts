@@ -12,7 +12,7 @@ export class UpdateTaskDto {
 
   @IsDateString()
   @IsOptional()
-  deadline?: string; // ISO string
+  deadline?: Date;
 
   @IsEnum(TaskPriority)
   @IsOptional()
