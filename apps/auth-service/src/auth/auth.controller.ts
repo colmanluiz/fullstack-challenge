@@ -26,4 +26,9 @@ export class AuthController {
   async logout(@Body() refreshDto: RefreshTokenDto) {
     return await this.authService.logout(refreshDto.refreshToken);
   }
+
+  @MessagePattern("user_exists")
+  async userExists(userId: string) {
+    return await this.authService.userExists(userId);
+  }
 }

@@ -244,9 +244,25 @@ POST /api/auth/logout      # Logout (protegido)
 - ✅ **Shared Exception Pattern** implementado:
   - Pacote `@task-management/exceptions` criado
   - Classe base `Exception` com internal/external messages
-  - `TaskNotFoundException` implementada como exemplo
-  - Integração com o Turborepo
-- 🚧 **CRUD operations** pendentes
+  - `TaskNotFoundException` e `ExistingAssignmentException` implementadas
+  - Integração com o Turborepo funcionando
+- ✅ **CRUD Operations** completas:
+  - `createTask` - criação com conversão de data e audit trail
+  - `getTasks` - listagem com paginação (page, limit, total, totalPages)
+  - `getTaskById` - busca individual com opção de incluir relations
+  - `updateTask` - atualização com audit trail e conversão de data
+  - `deleteTask` - remoção com audit trail
+  - `assignUsersToTask` - atribuição com validação de duplicatas
+  - `getTaskHistory` - histórico de alterações ordenado por data
+- ✅ **Audit Trail System** implementado:
+  - `TaskHistory` entity para rastreamento de mudanças
+  - Método privado `createHistoryEntry` para todas as operações
+  - Tracking automático em create/update/delete operations
+  - Estrutura: action, previousValue, newValue, userId, timestamp
+- ✅ **Data Validation & Conversion**:
+  - DTOs com class-validator (@IsEnum, @IsDateString, @IsOptional)
+  - Conversão automática string → Date para deadline
+  - Validação de enums para Priority e Status
 - 🚧 **RabbitMQ integration** pendente
 
 #### Frontend

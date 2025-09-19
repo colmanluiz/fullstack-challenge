@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Task } from "../entities/task.entity";
@@ -8,6 +8,8 @@ import { TaskNotFoundException } from "./exceptions/task-not-found.exception";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { ExistingAssignmentException } from "./exceptions/existing-assignment.exception";
+import { ClientProxy } from "@nestjs/microservices";
+import { UserNotFoundException } from "src/shared/exceptions/user-not-found.exception";
 
 @Injectable()
 export class TasksService {
@@ -19,20 +21,25 @@ export class TasksService {
     private readonly taskAssignmentRepository: Repository<TaskAssignment>,
 
     @InjectRepository(TaskHistory)
-    private readonly taskHistoryRepository: Repository<TaskHistory>
+    private readonly taskHistoryRepository: Repository<TaskHistory>,
+
+    @Inject("AUTH_SERVICE")
+    private readonly authClient: ClientProxy
   ) {}
 
-  async createTask(createTaskDto: CreateTaskDto, createdByUserId: string) {
+  async createTask(createTaskDto: CreateTaskDto, userId: string) {
+    await this.validateUserExists(userId);
+
     const newTask = this.taskRepository.create({
       ...createTaskDto,
       deadline: new Date(createTaskDto.deadline), // this convert our string into Date
-      createdBy: createdByUserId,
+      createdBy: userId,
     });
     const savedTask = await this.taskRepository.save(newTask);
 
     await this.createHistoryEntry(
       savedTask.id,
-      createdByUserId,
+      userId,
       "created",
       null,
       savedTask
@@ -80,6 +87,8 @@ export class TasksService {
     taskId: string,
     userId: string
   ) {
+    await this.validateUserExists(userId);
+
     const taskToUpdate = await this.getTaskById(taskId);
     const previousValue = { ...taskToUpdate };
 
@@ -104,6 +113,8 @@ export class TasksService {
   }
 
   async deleteTask(taskId: string, userId: string) {
+    await this.validateUserExists(userId);
+
     const taskToRemove = await this.getTaskById(taskId);
 
     await this.createHistoryEntry(
@@ -119,6 +130,7 @@ export class TasksService {
   }
 
   async assignUsersToTask(userId: string, taskId: string) {
+    await this.validateUserExists(userId);
     await this.getTaskById(taskId);
 
     const existingAssignment = await this.taskAssignmentRepository.findOne({
@@ -143,6 +155,13 @@ export class TasksService {
       where: { taskId },
       order: { createdAt: "DESC" },
     });
+  }
+
+  private async validateUserExists(userId: string): Promise<void> {
+    const userExists = await this.authClient.send("user_exists", userId);
+    if (!userExists) {
+      throw new UserNotFoundException(userId);
+    }
   }
 
   private async createHistoryEntry(

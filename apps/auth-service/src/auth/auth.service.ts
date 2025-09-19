@@ -120,6 +120,13 @@ export class AuthService {
     return { success: true };
   }
 
+  async userExists(userId: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    return !!user;
+  }
+
   private async generateAuthResponse(user: User): Promise<AuthResponseDto> {
     const accessToken = this.generateAccessToken(user);
     if (!accessToken) {
