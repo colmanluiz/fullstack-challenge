@@ -5,8 +5,7 @@ import { Task } from "../entities/task.entity";
 import { TaskAssignment } from "../entities/task-assignment.entity";
 import { TaskHistory } from "../entities/task-history.entity";
 import { TaskNotFoundException } from "../shared/exceptions/task-not-found.exception";
-import { CreateTaskDto } from "./dto/create-task.dto";
-import { UpdateTaskDto } from "./dto/update-task.dto";
+import { CreateTaskDto, UpdateTaskDto } from "@task-management/types";
 import { ExistingAssignmentException } from "./exceptions/existing-assignment.exception";
 import { ValidationService } from "../shared/services/validation.service";
 
@@ -30,7 +29,7 @@ export class TasksService {
 
     const newTask = this.taskRepository.create({
       ...createTaskDto,
-      deadline: new Date(createTaskDto.deadline), // this convert our string into Date
+      deadline: new Date(createTaskDto.deadline),
       createdBy: userId,
     });
     const savedTask = await this.taskRepository.save(newTask);
@@ -90,9 +89,9 @@ export class TasksService {
     const taskToUpdate = await this.getTaskById(taskId);
     const previousValue = { ...taskToUpdate };
 
-    const updateData = { ...updateTaskDto };
+    const updateData: any = { ...updateTaskDto };
     if (updateTaskDto.deadline) {
-      updateData.deadline = new Date(updateTaskDto.deadline);
+      updateData.deadline = new Date(updateTaskDto.deadline); // convert ISO string to Date
     }
 
     Object.assign(taskToUpdate, updateData);

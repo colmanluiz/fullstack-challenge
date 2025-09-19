@@ -2,7 +2,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -10,20 +9,7 @@ import {
 import { TaskAssignment } from "./task-assignment.entity";
 import { TaskHistory } from "./task-history.entity";
 import { Comment } from "./comment.entity";
-
-export enum TaskPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  URGENT = "urgent",
-}
-
-export enum TaskStatus {
-  TODO = "todo",
-  IN_PROGRESS = "in_progress",
-  REVIEW = "review",
-  DONE = "done",
-}
+import { TaskPriority, TaskStatus } from "@task-management/types";
 
 @Entity("tasks")
 export class Task {
