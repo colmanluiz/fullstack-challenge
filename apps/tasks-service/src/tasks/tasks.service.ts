@@ -85,6 +85,7 @@ export class TasksService {
     userId: string
   ) {
     await this.validationService.validateUserExists(userId);
+    await this.validationService.validateTaskExists(taskId); // do we need this?
 
     const taskToUpdate = await this.getTaskById(taskId);
     const previousValue = { ...taskToUpdate };
