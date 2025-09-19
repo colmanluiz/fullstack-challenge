@@ -179,7 +179,95 @@ throw new TaskNotFoundException(taskId);
 - ❌ **Overhead mínimo** - classe adicional vs exceptions nativas
 - ❌ **Learning curve** - desenvolvedores precisam seguir o padrão
 
-### 6. **Rate Limiting Global**
+### 6. **Shared ValidationService Pattern**
+
+**Decisão:** Criar `ValidationService` centralizado para comunicação entre microserviços.
+
+**Contexto:** Comments precisa validar tanto `taskId` (mesmo serviço) quanto `authorId` (Auth Service).
+
+**Vantagens:**
+
+- ✅ **DRY principle** - lógica de validação escrita uma vez, reutilizada em múltiplos domains
+- ✅ **Comunicação centralizada** - único ponto de configuração para TCP client com Auth Service
+- ✅ **Consistência de erro** - todos os services usam as mesmas exceptions e padrões
+- ✅ **Facilita testing** - mock único ValidationService para testes unitários
+- ✅ **Escalabilidade** - fácil adicionar novas validações (permissions, status, etc.)
+
+**Implementação:**
+
+```typescript
+// Shared validation across domains
+class ValidationService {
+  async validateUserExists(userId: string): Promise<void> {
+    const userExists = await this.authClient.send("user_exists", userId);
+    if (!userExists) throw new UserNotFoundException(userId);
+  }
+
+  async validateTaskExists(taskId: string): Promise<void> {
+    // Direct DB access (same service)
+  }
+}
+
+// Usage in both TasksService and CommentsService
+await this.validationService.validateUserExists(authorId);
+```
+
+**Trade-offs:**
+
+- ❌ **Abstração adicional** - uma camada a mais vs validação direta
+- ❌ **Acoplamento suave** - domains compartilham o ValidationService
+
+**Alternativas Consideradas:**
+
+- **Validação direta em cada service** - mais simples, mas duplica código
+- **Validação apenas no API Gateway** - perderia business rules no domain layer
+
+### 7. **Cross-Domain Validation Strategy**
+
+**Decisão:** Comments Service valida `taskId` (mesmo serviço) e `authorId` (Auth Service).
+
+**Trade-offs Analisados:**
+
+**Abordagem 1: Validação Cross-Domain (Implementada)**
+
+```typescript
+// ✅ Implementado
+async createComment(createCommentDto, taskId: string, authorId: string) {
+  await this.validationService.validateTaskExists(taskId);   // Same service
+  await this.validationService.validateUserExists(authorId); // Cross-service TCP
+}
+```
+
+**Vantagens:**
+
+- ✅ **UX superior** - erro claro "Task not found" vs array vazio confuso
+- ✅ **Data integrity** - garante que authorId existe no sistema
+- ✅ **Business rules** - validação no domain layer (onde pertence)
+
+**Desvantagens:**
+
+- ❌ **Latência adicional** - chamada TCP para Auth Service
+- ❌ **Dependência cross-service** - Comments depende de Auth estar disponível
+
+**Abordagem 2: Pure Domain (Considerada)**
+
+```typescript
+// ❌ Rejeitada
+async createComment(createCommentDto, taskId: string, authorId: string) {
+  // Apenas criar comment, confiar nos dados
+  return this.commentRepository.save(newComment);
+}
+```
+
+**Rejeitada por que:**
+
+- ❌ **UX inferior** - GET /api/tasks/invalid-uuid/comments retorna `200 []`
+- ❌ **Data integrity** - aceita authorId inválidos silenciosamente
+- ❌ **Debugging difícil** - erros aparecem apenas quando algo quebra
+
+**Decisão Final:** Validação cross-domain justificada pela qualidade da UX e integridade dos dados.
+
+### 8. **Rate Limiting Global**
 
 **Decisão:** Implementar rate limiting (10 req/sec) no API Gateway.
 
@@ -192,7 +280,6 @@ throw new TaskNotFoundException(taskId);
 **Trade-offs:**
 
 - ❌ Possível limitação para usuários legítimos em picos
-- ❌ Necessidade de configuração adequada por ambiente
 
 ---
 
@@ -263,6 +350,21 @@ POST /api/auth/logout      # Logout (protegido)
   - DTOs com class-validator (@IsEnum, @IsDateString, @IsOptional)
   - Conversão automática string → Date para deadline
   - Validação de enums para Priority e Status
+- ✅ **Comments Service** implementado:
+  - `createComment` - criação com validação cross-service (task + user)
+  - `getCommentsByTaskId` - listagem com paginação e validação de task
+  - Integração com SharedModule/ValidationService
+  - DTOs com validação apropriada
+- ✅ **Shared ValidationService** implementado:
+  - `validateUserExists` - comunicação TCP com Auth Service
+  - `validateTaskExists` - validação local de tasks
+  - Centralização de ClientProxy para Auth Service
+  - Reutilização entre TasksService e CommentsService
+- ✅ **TCP Communication** com Auth Service:
+  - `user_exists` message pattern implementado no Auth Service
+  - ClientProxy configurado via SharedModule
+  - Validação cross-service funcionando
+  - Environment-based configuration para host/port
 - 🚧 **RabbitMQ integration** pendente
 
 #### Frontend
