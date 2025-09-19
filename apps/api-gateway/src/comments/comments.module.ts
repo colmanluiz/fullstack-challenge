@@ -1,0 +1,22 @@
+import { Module } from "@nestjs/common";
+import { ClientsModule, Transport } from "@nestjs/microservices";
+import { CommentsController } from "./comments.controller";
+import { CommentsService } from "./comments.service";
+
+@Module({
+  imports: [
+    ClientsModule.register([
+      {
+        name: "TASKS_SERVICE",
+        transport: Transport.TCP,
+        options: {
+          host: process.env.TASKS_SERVICE_HOST || "localhost",
+          port: parseInt(process.env.TASKS_SERVICE_PORT as string) || 3004,
+        },
+      },
+    ]),
+  ],
+  controllers: [CommentsController],
+  providers: [CommentsService],
+})
+export class CommentsModule {}
