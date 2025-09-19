@@ -5,21 +5,12 @@ import { TasksService } from "./tasks.service";
 import { Task } from "../entities/task.entity";
 import { TaskAssignment } from "../entities/task-assignment.entity";
 import { TaskHistory } from "../entities/task-history.entity";
-import { ClientsModule, Transport } from "@nestjs/microservices";
+import { SharedModule } from "../shared/shared.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Task, TaskAssignment, TaskHistory]),
-    ClientsModule.register([
-      {
-        name: "AUTH_SERVICE",
-        transport: Transport.TCP,
-        options: {
-          host: process.env.AUTH_SERVICE_HOST,
-          port: parseInt(process.env.AUTH_SERVICE_PORT) || 3003,
-        },
-      },
-    ]),
+    SharedModule,
   ],
   controllers: [TasksController],
   providers: [TasksService],

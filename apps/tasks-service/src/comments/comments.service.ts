@@ -3,8 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Comment } from "src/entities/comment.entity";
 import { Repository } from "typeorm";
 import { CreateCommentDto } from "./dto/create-comment.dto";
-import { Task } from "src/entities/task.entity";
-import { TaskNotFoundException } from "src/tasks/exceptions/task-not-found.exception";
+import { ValidationService } from "../shared/services/validation.service";
 
 @Injectable()
 export class CommentsService {
@@ -12,8 +11,7 @@ export class CommentsService {
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
 
-    @InjectRepository(Task)
-    private readonly taskRepository: Repository<Task>
+    private readonly validationService: ValidationService
   ) {}
 
   async createComment(
@@ -21,7 +19,8 @@ export class CommentsService {
     taskId: string,
     authorId: string
   ) {
-    await this.validateTaskExists(taskId);
+    await this.validationService.validateTaskExists(taskId);
+    await this.validationService.validateUserExists(authorId);
 
     const newComment = this.commentRepository.create({
       ...createCommentDto,
@@ -37,7 +36,7 @@ export class CommentsService {
   }
 
   async getCommentsByTaskId(taskId: string, page = 1, limit = 10) {
-    await this.validateTaskExists(taskId);
+    await this.validationService.validateTaskExists(taskId);
 
     const [comments, commentsCount] = await this.commentRepository.findAndCount(
       {
@@ -59,14 +58,4 @@ export class CommentsService {
     };
   }
 
-  private async validateTaskExists(taskId: string): Promise<void> {
-    const task = await this.taskRepository.findOne({ where: { id: taskId } });
-
-    if (!task) {
-      throw new TaskNotFoundException(taskId);
-    }
-
-    // do we really need to fetch tasks here?
-    // add a tradeoff later, this is using a cross-domain validation
-  }
 }

@@ -1,15 +1,14 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Task } from "../entities/task.entity";
 import { TaskAssignment } from "../entities/task-assignment.entity";
 import { TaskHistory } from "../entities/task-history.entity";
-import { TaskNotFoundException } from "./exceptions/task-not-found.exception";
+import { TaskNotFoundException } from "../shared/exceptions/task-not-found.exception";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { ExistingAssignmentException } from "./exceptions/existing-assignment.exception";
-import { ClientProxy } from "@nestjs/microservices";
-import { UserNotFoundException } from "src/shared/exceptions/user-not-found.exception";
+import { ValidationService } from "../shared/services/validation.service";
 
 @Injectable()
 export class TasksService {
@@ -23,12 +22,11 @@ export class TasksService {
     @InjectRepository(TaskHistory)
     private readonly taskHistoryRepository: Repository<TaskHistory>,
 
-    @Inject("AUTH_SERVICE")
-    private readonly authClient: ClientProxy
+    private readonly validationService: ValidationService
   ) {}
 
   async createTask(createTaskDto: CreateTaskDto, userId: string) {
-    await this.validateUserExists(userId);
+    await this.validationService.validateUserExists(userId);
 
     const newTask = this.taskRepository.create({
       ...createTaskDto,
@@ -87,7 +85,7 @@ export class TasksService {
     taskId: string,
     userId: string
   ) {
-    await this.validateUserExists(userId);
+    await this.validationService.validateUserExists(userId);
 
     const taskToUpdate = await this.getTaskById(taskId);
     const previousValue = { ...taskToUpdate };
@@ -113,7 +111,7 @@ export class TasksService {
   }
 
   async deleteTask(taskId: string, userId: string) {
-    await this.validateUserExists(userId);
+    await this.validationService.validateUserExists(userId);
 
     const taskToRemove = await this.getTaskById(taskId);
 
@@ -130,7 +128,7 @@ export class TasksService {
   }
 
   async assignUsersToTask(userId: string, taskId: string) {
-    await this.validateUserExists(userId);
+    await this.validationService.validateUserExists(userId);
     await this.getTaskById(taskId);
 
     const existingAssignment = await this.taskAssignmentRepository.findOne({
@@ -155,13 +153,6 @@ export class TasksService {
       where: { taskId },
       order: { createdAt: "DESC" },
     });
-  }
-
-  private async validateUserExists(userId: string): Promise<void> {
-    const userExists = await this.authClient.send("user_exists", userId);
-    if (!userExists) {
-      throw new UserNotFoundException(userId);
-    }
   }
 
   private async createHistoryEntry(
