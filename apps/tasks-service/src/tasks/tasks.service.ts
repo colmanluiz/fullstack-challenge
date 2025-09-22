@@ -8,6 +8,7 @@ import { TaskNotFoundException } from "../shared/exceptions/task-not-found.excep
 import { CreateTaskDto, UpdateTaskDto } from "@task-management/types";
 import { ExistingAssignmentException } from "./exceptions/existing-assignment.exception";
 import { ValidationService } from "../shared/services/validation.service";
+import { EventsService } from "src/shared/services/events.service";
 
 @Injectable()
 export class TasksService {
@@ -21,7 +22,8 @@ export class TasksService {
     @InjectRepository(TaskHistory)
     private readonly taskHistoryRepository: Repository<TaskHistory>,
 
-    private readonly validationService: ValidationService
+    private readonly validationService: ValidationService,
+    private readonly eventsService: EventsService
   ) {}
 
   async createTask(createTaskDto: CreateTaskDto, userId: string) {
@@ -32,17 +34,23 @@ export class TasksService {
       deadline: new Date(createTaskDto.deadline),
       createdBy: userId,
     });
-    const savedTask = await this.taskRepository.save(newTask);
+    const taskToCreate = await this.taskRepository.save(newTask);
+
+    this.eventsService.publishTaskCreated(
+      taskToCreate.id,
+      createTaskDto,
+      userId
+    );
 
     await this.createHistoryEntry(
-      savedTask.id,
+      taskToCreate.id,
       userId,
       "created",
       null,
-      savedTask
+      taskToCreate
     );
 
-    return savedTask;
+    return taskToCreate;
   }
 
   async getTasks(page = 1, limit = 10) {
@@ -99,6 +107,12 @@ export class TasksService {
 
     await this.taskRepository.save(taskToUpdate);
 
+    this.eventsService.publishTaskUpdated(
+      taskToUpdate.id,
+      updateTaskDto,
+      userId
+    );
+
     await this.createHistoryEntry(
       taskId,
       userId,
@@ -129,7 +143,7 @@ export class TasksService {
 
   async assignUsersToTask(userId: string, taskId: string) {
     await this.validationService.validateUserExists(userId);
-    await this.getTaskById(taskId);
+    await this.validationService.validateTaskExists(taskId);
 
     const existingAssignment = await this.taskAssignmentRepository.findOne({
       where: { userId, taskId },
@@ -144,8 +158,8 @@ export class TasksService {
       taskId,
     });
 
-    await this.taskAssignmentRepository.save(newTaskAssignment);
-    return newTaskAssignment;
+    const savedAssignment = await this.taskAssignmentRepository.save(newTaskAssignment);
+    return savedAssignment;
   }
 
   async getTaskHistory(taskId: string) {

@@ -22,7 +22,7 @@ export class TaskHistory {
   @Column({ type: "varchar" })
   action: string;
 
-  @Column({ type: "json" })
+  @Column({ type: "json", nullable: true })
   previousValue: any;
 
   @Column({ type: "json" })

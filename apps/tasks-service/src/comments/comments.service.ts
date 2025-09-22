@@ -4,6 +4,7 @@ import { Comment } from "src/entities/comment.entity";
 import { Repository } from "typeorm";
 import { CreateCommentDto } from "@task-management/types";
 import { ValidationService } from "../shared/services/validation.service";
+import { EventsService } from "src/shared/services/events.service";
 
 @Injectable()
 export class CommentsService {
@@ -11,7 +12,8 @@ export class CommentsService {
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
 
-    private readonly validationService: ValidationService
+    private readonly validationService: ValidationService,
+    private readonly eventsService: EventsService
   ) {}
 
   async createComment(
@@ -28,11 +30,16 @@ export class CommentsService {
       authorId,
     });
 
-    const savedComment = await this.commentRepository.save(newComment);
+    const commentToCreate = await this.commentRepository.save(newComment);
 
-    // add rabbitmq event later
+    this.eventsService.publishCommentCreated(
+      commentToCreate.id,
+      createCommentDto,
+      taskId,
+      authorId
+    );
 
-    return savedComment;
+    return commentToCreate;
   }
 
   async getCommentsByTaskId(taskId: string, page = 1, limit = 10) {
@@ -57,5 +64,4 @@ export class CommentsService {
       },
     };
   }
-
 }

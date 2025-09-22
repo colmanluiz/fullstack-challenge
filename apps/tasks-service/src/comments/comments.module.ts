@@ -2,11 +2,12 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Comment } from "src/entities/comment.entity";
 import { CommentsService } from "./comments.service";
+import { CommentsController } from "./comments.controller";
 import { SharedModule } from "../shared/shared.module";
 
 @Module({
   imports: [TypeOrmModule.forFeature([Comment]), SharedModule],
-  controllers: [],
+  controllers: [CommentsController],
   providers: [CommentsService],
   exports: [CommentsService],
 })

@@ -450,28 +450,29 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
   - Shared DTOs entre API Gateway e Tasks Service
   - JWT Guards protecting all endpoints
   - Complete Swagger documentation
-- 🚧 **RabbitMQ integration** pendente
+- ✅ **RabbitMQ Event System** implementado:
+  - EventsService com padrão fire-and-forget para performance
+  - Event publishing: `task.created`, `task.updated`, `comment.created`
+  - Payloads baseados em DTOs (não entidades) para arquitetura limpa
+  - RabbitMQ ClientProxy configurado no SharedModule
+  - Queue `task_events` com configuração durable
+  - Management UI disponível em http://localhost:15672
 
 ### 🚧 **Próximos Passos**
 
-#### 1. RabbitMQ Event System (Priority: Alta)
-- Implementar event publishing no Tasks Service
-- Configurar message broker para eventos de task/comment
-- Events: `task.created`, `task.updated`, `task.assigned`, `comment.created`
-
-#### 2. Notifications Service (Priority: Alta)
+#### 1. Notifications Service (Priority: Alta)
 - Microservice para consumir eventos RabbitMQ
 - WebSocket Gateway para notificações real-time
 - Persistência de notificações no banco
 
-#### 3. Frontend Implementation (Priority: Média)
+#### 2. Frontend Implementation (Priority: Média)
 - React + TanStack Router setup
 - Páginas: Login, Task List, Task Detail com comentários
 - shadcn/ui + Tailwind CSS components
 - WebSocket client para notificações
 - Context/Zustand para state management
 
-#### 4. Integration & Testing (Priority: Baixa)
+#### 3. Integration & Testing (Priority: Baixa)
 - E2E testing com todos os serviços
 - Performance testing das APIs
 - Deployment com Docker Compose completo

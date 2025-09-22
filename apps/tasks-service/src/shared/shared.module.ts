@@ -3,6 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { Task } from "../entities/task.entity";
 import { ValidationService } from "./services/validation.service";
+import { EventsService } from "./services/events.service";
 
 @Module({
   imports: [
@@ -16,9 +17,22 @@ import { ValidationService } from "./services/validation.service";
           port: parseInt(process.env.AUTH_SERVICE_PORT as string) || 3003,
         },
       },
+      {
+        name: "EVENTS_SERVICE",
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            process.env.RABBITMQ_URL || "amqp://admin:admin@localhost:5672",
+          ],
+          queue: "task_events",
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
     ]),
   ],
-  providers: [ValidationService],
-  exports: [ValidationService],
+  providers: [ValidationService, EventsService],
+  exports: [ValidationService, EventsService],
 })
 export class SharedModule {}
