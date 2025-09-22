@@ -267,7 +267,58 @@ async createComment(createCommentDto, taskId: string, authorId: string) {
 
 **Decisão Final:** Validação cross-domain justificada pela qualidade da UX e integridade dos dados.
 
-### 8. **Rate Limiting Global**
+### 8. **HTTP to TCP Routing Pattern**
+
+**Decisão:** API Gateway converte HTTP requests para TCP messages direcionados aos microservices.
+
+**Implementação:**
+
+```typescript
+// API Gateway (HTTP Layer)
+@Controller('tasks')
+@UseGuards(JwtAuthGuard)
+export class TasksController {
+  @Post()
+  async createTask(@Body() createTaskDto: CreateTaskDto, @Request() req) {
+    const userId = req.user.id; // Extract from JWT
+    return this.tasksService.createTask(createTaskDto, userId);
+  }
+}
+
+// API Gateway Service (TCP Client)
+@Injectable()
+export class TasksService {
+  async createTask(createTaskDto: CreateTaskDto, userId: string) {
+    return firstValueFrom(
+      this.tasksClient.send('create_task', { createTaskDto, userId })
+    );
+  }
+}
+
+// Tasks Microservice (TCP Server)
+@Controller()
+export class TasksController {
+  @MessagePattern('create_task')
+  async createTask(@Payload() data: { createTaskDto: CreateTaskDto; userId: string }) {
+    const { createTaskDto, userId } = data;
+    return this.tasksService.createTask(createTaskDto, userId);
+  }
+}
+```
+
+**Vantagens:**
+
+- ✅ **Separation of concerns** - API Gateway: HTTP/Auth, Microservice: Business Logic
+- ✅ **Scalabilidade** - Microservices podem ser escalados independentemente
+- ✅ **Reutilização** - Múltiplos gateways podem usar o mesmo microservice
+- ✅ **Type safety** - Shared DTOs garantem consistência de tipos
+
+**Trade-offs:**
+
+- ❌ **Latência** - Overhead de rede para cada operação
+- ❌ **Complexidade** - Duas camadas para manter vs API monolítica
+
+### 9. **Rate Limiting Global**
 
 **Decisão:** Implementar rate limiting (10 req/sec) no API Gateway.
 
@@ -306,6 +357,7 @@ async createComment(createCommentDto, taskId: string, authorId: string) {
 
 #### API Endpoints
 
+**Authentication:**
 ```bash
 POST /api/auth/register    # Registro + auto-login
 POST /api/auth/login       # Autenticação
@@ -313,9 +365,28 @@ POST /api/auth/refresh     # Token refresh (protegido)
 POST /api/auth/logout      # Logout (protegido)
 ```
 
-### 🚧 **Em Desenvolvimento**
+**Tasks Management:**
+```bash
+POST   /api/tasks                    # Criar task (protegido)
+GET    /api/tasks?page=1&limit=10    # Listar tasks com paginação (protegido)
+GET    /api/tasks/:id                # Buscar task por ID (protegido)
+PUT    /api/tasks/:id                # Atualizar task (protegido)
+DELETE /api/tasks/:id                # Deletar task (protegido)
+POST   /api/tasks/:id/assign         # Atribuir usuário à task (protegido)
+GET    /api/tasks/:id/history        # Histórico da task (protegido)
+```
 
-#### Tasks Service
+**Comments:**
+```bash
+POST   /api/tasks/:taskId/comments              # Criar comentário (protegido)
+GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (protegido)
+```
+
+**Swagger Documentation:** `http://localhost:3001/api/docs`
+
+### ✅ **Tasks Service (Completo)**
+
+#### Core Implementation
 
 - ✅ **Estrutura básica** criada (NestJS microservice + TCP transport)
 - ✅ **Entities completas** com TypeORM relationships:
@@ -365,17 +436,45 @@ POST /api/auth/logout      # Logout (protegido)
   - ClientProxy configurado via SharedModule
   - Validação cross-service funcionando
   - Environment-based configuration para host/port
+- ✅ **Tasks Controller (TCP)** implementado:
+  - `create_task`, `get_tasks`, `get_task_by_id`, `update_task`, `delete_task`
+  - `assign_users_to_task`, `get_task_history`
+  - Proper @Payload() destructuring para all message patterns
+  - Pagination support com defaults (page=1, limit=10)
+- ✅ **Comments Controller (TCP)** implementado:
+  - `create_comment`, `get_task_comments`
+  - Cross-service validation (task exists + user exists)
+  - Pagination support para listagem de comentários
+- ✅ **API Gateway Integration** completa:
+  - HTTP to TCP routing para todos os endpoints
+  - Shared DTOs entre API Gateway e Tasks Service
+  - JWT Guards protecting all endpoints
+  - Complete Swagger documentation
 - 🚧 **RabbitMQ integration** pendente
 
-#### Frontend
+### 🚧 **Próximos Passos**
 
-- Estrutura não iniciada
-- React + TanStack Router planejado
-- shadcn/ui + Tailwind CSS planejado
+#### 1. RabbitMQ Event System (Priority: Alta)
+- Implementar event publishing no Tasks Service
+- Configurar message broker para eventos de task/comment
+- Events: `task.created`, `task.updated`, `task.assigned`, `comment.created`
 
-#### Notifications Service
+#### 2. Notifications Service (Priority: Alta)
+- Microservice para consumir eventos RabbitMQ
+- WebSocket Gateway para notificações real-time
+- Persistência de notificações no banco
 
-- Estrutura não iniciada
+#### 3. Frontend Implementation (Priority: Média)
+- React + TanStack Router setup
+- Páginas: Login, Task List, Task Detail com comentários
+- shadcn/ui + Tailwind CSS components
+- WebSocket client para notificações
+- Context/Zustand para state management
+
+#### 4. Integration & Testing (Priority: Baixa)
+- E2E testing com todos os serviços
+- Performance testing das APIs
+- Deployment com Docker Compose completo
 
 ---
 
