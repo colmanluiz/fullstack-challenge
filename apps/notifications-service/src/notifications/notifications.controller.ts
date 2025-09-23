@@ -30,29 +30,37 @@ export class NotificationsController {
       status,
       deadline,
       createdBy,
+      assignees,
       timestamp,
     } = taskData;
 
     try {
-      const notification = await this.notificationsService.createNotification({
-        userId: createdBy,
-        type: NotificationType.TASK_UPDATED, // Using TASK_UPDATED as general task notification
-        title: "Task Created",
-        message: `Task "${title}" was created successfully`,
-        metadata: {
-          taskId,
-          title,
-          description,
-          priority,
-          status,
-          deadline,
-          timestamp,
-        },
-      });
+      // Notify assignees about the new task (if any)
+      const usersToNotify = assignees.length > 0 ? assignees : [createdBy];
 
-      this.notificationsGateway.sendNotificationToUser(createdBy, notification);
+      for (const userId of usersToNotify) {
+        const notification = await this.notificationsService.createNotification({
+          userId,
+          type: NotificationType.TASK_UPDATED,
+          title: assignees.includes(userId) ? "Task Assigned" : "Task Created",
+          message: assignees.includes(userId)
+            ? `You were assigned to task "${title}"`
+            : `Task "${title}" was created successfully`,
+          metadata: {
+            taskId,
+            title,
+            description,
+            priority,
+            status,
+            deadline,
+            timestamp,
+          },
+        });
 
-      console.log(`Notification created for task creation: ${taskId}`);
+        this.notificationsGateway.sendNotificationToUser(userId, notification);
+      }
+
+      console.log(`Notifications created for task creation: ${taskId} (${usersToNotify.length} users)`);
     } catch (error) {
       console.error("Failed to create task creation notification:", error);
     }
@@ -60,26 +68,33 @@ export class NotificationsController {
 
   @EventPattern("task.updated")
   async handleTaskUpdated(@Payload() taskData: TaskUpdatedEventDto) {
-    const { taskId, changes, updatedBy, timestamp } = taskData;
+    const { taskId, changes, updatedBy, assignees, createdBy, timestamp } = taskData;
 
     const changesList = Object.keys(changes).join(", ");
 
     try {
-      const notification = await this.notificationsService.createNotification({
-        userId: updatedBy, // For now, notify the person who made the update
-        type: NotificationType.TASK_UPDATED,
-        title: "Task Updated",
-        message: `Task was updated. Changes: ${changesList}`,
-        metadata: {
-          taskId,
-          changes,
-          timestamp,
-        },
-      });
+      // Notify assignees and task creator (excluding the person who made the update)
+      const usersToNotify = [...assignees, createdBy]
+        .filter(userId => userId !== updatedBy) // Exclude the person who made the update
+        .filter((userId, index, arr) => arr.indexOf(userId) === index); // Remove duplicates
 
-      this.notificationsGateway.sendNotificationToUser(updatedBy, notification);
+      for (const userId of usersToNotify) {
+        const notification = await this.notificationsService.createNotification({
+          userId,
+          type: NotificationType.TASK_UPDATED,
+          title: "Task Updated",
+          message: `Task was updated. Changes: ${changesList}`,
+          metadata: {
+            taskId,
+            changes,
+            timestamp,
+          },
+        });
 
-      console.log(`Notification created for task update: ${taskId}`);
+        this.notificationsGateway.sendNotificationToUser(userId, notification);
+      }
+
+      console.log(`Notifications created for task update: ${taskId} (${usersToNotify.length} users)`);
     } catch (error) {
       console.error("Failed to create task update notification:", error);
     }
@@ -87,29 +102,36 @@ export class NotificationsController {
 
   @EventPattern("comment.created")
   async handleCommentCreated(@Payload() commentData: CommentCreatedEventDto) {
-    const { commentId, taskId, content, authorId, timestamp } = commentData;
+    const { commentId, taskId, content, authorId, assignees, createdBy, timestamp } = commentData;
 
     const truncatedContent =
       content.length > 50 ? content.substring(0, 50) + "..." : content;
 
     try {
-      const notification = await this.notificationsService.createNotification({
-        userId: authorId, // For now, notify the comment author
-        type: NotificationType.COMMENT_CREATED,
-        title: "Comment Added",
-        message: `New comment: "${truncatedContent}"`,
-        metadata: {
-          commentId,
-          taskId,
-          content,
-          authorId,
-          timestamp,
-        },
-      });
+      // Notify task participants (assignees + creator) except the comment author
+      const usersToNotify = [...assignees, createdBy]
+        .filter(userId => userId !== authorId) // Exclude the comment author
+        .filter((userId, index, arr) => arr.indexOf(userId) === index); // Remove duplicates
 
-      this.notificationsGateway.sendNotificationToUser(authorId, notification);
+      for (const userId of usersToNotify) {
+        const notification = await this.notificationsService.createNotification({
+          userId,
+          type: NotificationType.COMMENT_CREATED,
+          title: "New Comment",
+          message: `New comment: "${truncatedContent}"`,
+          metadata: {
+            commentId,
+            taskId,
+            content,
+            authorId,
+            timestamp,
+          },
+        });
 
-      console.log(`Notification created for comment: ${commentId}`);
+        this.notificationsGateway.sendNotificationToUser(userId, notification);
+      }
+
+      console.log(`Notifications created for comment: ${commentId} (${usersToNotify.length} users)`);
     } catch (error) {
       console.error("Failed to create comment notification:", error);
     }

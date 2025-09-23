@@ -7,6 +7,7 @@ import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { CommentsModule } from "./comments/comments.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CommentsModule } from "./comments/comments.module";
     AuthModule,
     TasksModule,
     CommentsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

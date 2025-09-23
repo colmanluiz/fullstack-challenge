@@ -24,6 +24,15 @@ async function bootstrap() {
     },
   });
 
+  // tcp microservice configuration for api gateway communication
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.TCP,
+    options: {
+      host: process.env.NOTIFICATIONS_SERVICE_HOST || "localhost",
+      port: parseInt(process.env.NOTIFICATIONS_SERVICE_TCP_PORT as string) || 3006,
+    },
+  });
+
   // start both http and rabbitmq microservice
   await app.startAllMicroservices();
 
@@ -31,6 +40,9 @@ async function bootstrap() {
   await app.listen(port);
 
   Logger.log(`Notifications service is running on: ${port}`);
+  Logger.log(
+    `TCP microservice running on: ${process.env.NOTIFICATIONS_SERVICE_TCP_PORT || 3006}`
+  );
   Logger.log(
     `Connected to RabbitMQ at: ${process.env.RABBITMQ_URL || "amqp://localhost:5672"}`
   );
