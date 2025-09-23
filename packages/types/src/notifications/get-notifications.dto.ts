@@ -47,4 +47,13 @@ export class GetNotificationsDto {
   @IsOptional()
   @IsEnum(NotificationStatusFilter)
   status?: NotificationStatusFilter = NotificationStatusFilter.ALL;
+
+  @ApiProperty({
+    example: false,
+    description: "Show only unread notifications",
+    default: false,
+    required: false
+  })
+  @IsOptional()
+  unreadOnly?: boolean = false;
 }
