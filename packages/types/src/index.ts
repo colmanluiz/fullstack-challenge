@@ -6,3 +6,6 @@ export * from "./tasks/index";
 
 // Export all comments types
 export * from "./comments/index";
+
+// Export all notifications types
+export * from "./notifications/index";

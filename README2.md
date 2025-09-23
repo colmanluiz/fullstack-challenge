@@ -275,7 +275,7 @@ async createComment(createCommentDto, taskId: string, authorId: string) {
 
 ```typescript
 // API Gateway (HTTP Layer)
-@Controller('tasks')
+@Controller("tasks")
 @UseGuards(JwtAuthGuard)
 export class TasksController {
   @Post()
@@ -290,7 +290,7 @@ export class TasksController {
 export class TasksService {
   async createTask(createTaskDto: CreateTaskDto, userId: string) {
     return firstValueFrom(
-      this.tasksClient.send('create_task', { createTaskDto, userId })
+      this.tasksClient.send("create_task", { createTaskDto, userId })
     );
   }
 }
@@ -298,8 +298,10 @@ export class TasksService {
 // Tasks Microservice (TCP Server)
 @Controller()
 export class TasksController {
-  @MessagePattern('create_task')
-  async createTask(@Payload() data: { createTaskDto: CreateTaskDto; userId: string }) {
+  @MessagePattern("create_task")
+  async createTask(
+    @Payload() data: { createTaskDto: CreateTaskDto; userId: string }
+  ) {
     const { createTaskDto, userId } = data;
     return this.tasksService.createTask(createTaskDto, userId);
   }
@@ -358,6 +360,7 @@ export class TasksController {
 #### API Endpoints
 
 **Authentication:**
+
 ```bash
 POST /api/auth/register    # Registro + auto-login
 POST /api/auth/login       # Autenticação
@@ -366,6 +369,7 @@ POST /api/auth/logout      # Logout (protegido)
 ```
 
 **Tasks Management:**
+
 ```bash
 POST   /api/tasks                    # Criar task (protegido)
 GET    /api/tasks?page=1&limit=10    # Listar tasks com paginação (protegido)
@@ -377,6 +381,7 @@ GET    /api/tasks/:id/history        # Histórico da task (protegido)
 ```
 
 **Comments:**
+
 ```bash
 POST   /api/tasks/:taskId/comments              # Criar comentário (protegido)
 GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (protegido)
@@ -461,11 +466,13 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 ### 🚧 **Próximos Passos**
 
 #### 1. Notifications Service (Priority: Alta)
+
 - Microservice para consumir eventos RabbitMQ
 - WebSocket Gateway para notificações real-time
 - Persistência de notificações no banco
 
 #### 2. Frontend Implementation (Priority: Média)
+
 - React + TanStack Router setup
 - Páginas: Login, Task List, Task Detail com comentários
 - shadcn/ui + Tailwind CSS components
@@ -473,6 +480,7 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 - Context/Zustand para state management
 
 #### 3. Integration & Testing (Priority: Baixa)
+
 - E2E testing com todos os serviços
 - Performance testing das APIs
 - Deployment com Docker Compose completo
@@ -502,6 +510,7 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 - [ ] **Logging centralizado** com Winston/Pino
 - [ ] **Input sanitization** adicional
 - [ ] **Error handling** padronizado
+- [ ] **Improve DTOs** melhorar validação e mensagens de erro dos DTOs de Tasks e Comments
 
 #### Médio Prazo
 
