@@ -497,28 +497,34 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
   - Separação clara entre API filters (NotificationStatusFilter) e entity enums
   - Solução elegante para filtro "all" sem type casting inseguro
   - Imports organizados e enums re-exportados para facilidade de uso
+- ✅ **NotificationsController** estruturado:
+  - @EventPattern handlers para RabbitMQ events (task.created, task.updated, comment.created)
+  - @MessagePattern handlers para API calls (get_user_notifications, mark_as_read, etc.)
+  - Type safety completa com Event DTOs importados
+  - Separação clara entre event processing e API endpoints
+
+#### Implementação Completa
+
+- ✅ **RabbitMQ Event Processing** - Business logic completa em todos @EventPattern handlers
+- ✅ **Database Integration** - Notificações sendo criadas e persistidas corretamente
+- ✅ **Environment Configuration** - .env configurado com database e RabbitMQ credentials
+- ✅ **End-to-End Event Flow** - task.created, task.updated, comment.created funcionando
 
 #### Arquitetura Preparada
 
 - 🏗️ **WebSocket Gateway** (estrutura criada, implementação pendente)
-- 🏗️ **RabbitMQ Consumer** (estrutura criada, @EventPattern handlers pendentes)
 - 🏗️ **Hybrid Application** configurado para HTTP + WebSocket + RabbitMQ
 
 ### 🚧 **Próximos Passos**
 
-#### 1. Notifications Service - Event Processing (Priority: Alta)
+#### 1. Notifications Service - WebSocket Implementation (Priority: Alta)
 
-- Implementar @EventPattern handlers para task.created, task.updated, comment.created
-- Lógica de negócio: determinar quem deve ser notificado para cada evento
-- Transformação de eventos RabbitMQ para notificações de usuário
+- ✅ Event processing completamente implementado e testado
+- 🚧 WebSocket Gateway para delivery real-time das notificações
+- 🚧 Room-based user targeting para envio direcionado
+- 🚧 Frontend WebSocket client integration
 
-#### 2. Notifications Service - WebSocket & API (Priority: Alta)
-
-- WebSocket connection management e room-based user targeting
-- Real-time notification delivery para frontend
-- HTTP API endpoints para notification management (via API Gateway)
-
-#### 3. Frontend Implementation (Priority: Média)
+#### 2. Frontend Implementation (Priority: Média)
 
 - React + TanStack Router setup
 - Páginas: Login, Task List, Task Detail com comentários
@@ -526,7 +532,7 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 - WebSocket client para notificações
 - Context/Zustand para state management
 
-#### 4. Integration & Testing (Priority: Baixa)
+#### 3. Integration & Testing (Priority: Baixa)
 
 - E2E testing com todos os serviços
 - Performance testing das APIs
