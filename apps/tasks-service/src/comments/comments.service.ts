@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Comment } from "src/entities/comment.entity";
+import { Task } from "src/entities/task.entity";
+import { TaskAssignment } from "src/entities/task-assignment.entity";
 import { Repository } from "typeorm";
 import { CreateCommentDto } from "@task-management/types";
 import { ValidationService } from "../shared/services/validation.service";
@@ -11,6 +13,12 @@ export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
+
+    @InjectRepository(TaskAssignment)
+    private readonly taskAssignmentRepository: Repository<TaskAssignment>,
 
     private readonly validationService: ValidationService,
     private readonly eventsService: EventsService
@@ -32,11 +40,17 @@ export class CommentsService {
 
     const commentToCreate = await this.commentRepository.save(newComment);
 
+    // Get task assignees and creator for notifications
+    const assignees = await this.getTaskAssignees(taskId);
+    const task = await this.taskRepository.findOne({ where: { id: taskId } });
+
     this.eventsService.publishCommentCreated(
       commentToCreate.id,
       createCommentDto,
       taskId,
-      authorId
+      authorId,
+      assignees,
+      task.createdBy
     );
 
     return commentToCreate;
@@ -63,5 +77,13 @@ export class CommentsService {
         totalPages: Math.ceil(commentsCount / limit),
       },
     };
+  }
+
+  // Helper method to get assignees for a task
+  private async getTaskAssignees(taskId: string): Promise<string[]> {
+    const assignments = await this.taskAssignmentRepository.find({
+      where: { taskId },
+    });
+    return assignments.map(assignment => assignment.userId);
   }
 }

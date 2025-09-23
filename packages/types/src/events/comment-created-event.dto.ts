@@ -3,5 +3,7 @@ export interface CommentCreatedEventDto {
   taskId: string;
   content: string;
   authorId: string;
+  assignees: string[]; // Task assignees
+  createdBy: string; // Task creator
   timestamp: string;
 }

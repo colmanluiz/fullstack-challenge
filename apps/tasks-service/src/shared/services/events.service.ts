@@ -19,7 +19,8 @@ export class EventsService {
   publishTaskCreated(
     taskId: string,
     createTaskDto: CreateTaskDto,
-    userId: string
+    userId: string,
+    assignees: string[] = []
   ): void {
     const eventPayload: TaskCreatedEventDto = {
       taskId,
@@ -29,6 +30,7 @@ export class EventsService {
       status: createTaskDto.status,
       deadline: createTaskDto.deadline,
       createdBy: userId,
+      assignees,
       timestamp: new Date().toISOString(),
     };
 
@@ -38,12 +40,16 @@ export class EventsService {
   publishTaskUpdated(
     taskId: string,
     updateTaskDto: UpdateTaskDto,
-    userId: string
+    userId: string,
+    assignees: string[] = [],
+    createdBy: string
   ): void {
     const eventPayload: TaskUpdatedEventDto = {
       taskId,
       changes: updateTaskDto,
       updatedBy: userId,
+      assignees,
+      createdBy,
       timestamp: new Date().toISOString(),
     };
 
@@ -54,13 +60,17 @@ export class EventsService {
     commentId: string,
     createCommentDto: CreateCommentDto,
     taskId: string,
-    authorId: string
+    authorId: string,
+    assignees: string[] = [],
+    createdBy: string
   ): void {
     const eventPayload: CommentCreatedEventDto = {
       commentId,
       taskId,
       content: createCommentDto.content,
       authorId,
+      assignees,
+      createdBy,
       timestamp: new Date().toISOString(),
     };
 

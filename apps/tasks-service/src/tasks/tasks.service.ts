@@ -36,10 +36,14 @@ export class TasksService {
     });
     const taskToCreate = await this.taskRepository.save(newTask);
 
+    // Get assignees for the created task (initially empty for new tasks)
+    const assignees = await this.getTaskAssignees(taskToCreate.id);
+
     this.eventsService.publishTaskCreated(
       taskToCreate.id,
       createTaskDto,
-      userId
+      userId,
+      assignees
     );
 
     await this.createHistoryEntry(
@@ -107,10 +111,15 @@ export class TasksService {
 
     await this.taskRepository.save(taskToUpdate);
 
+    // Get current assignees and task creator for notifications
+    const assignees = await this.getTaskAssignees(taskToUpdate.id);
+
     this.eventsService.publishTaskUpdated(
       taskToUpdate.id,
       updateTaskDto,
-      userId
+      userId,
+      assignees,
+      taskToUpdate.createdBy
     );
 
     await this.createHistoryEntry(
@@ -185,5 +194,13 @@ export class TasksService {
     });
 
     await this.taskHistoryRepository.save(historyEntry);
+  }
+
+  // Helper method to get assignees for a task
+  private async getTaskAssignees(taskId: string): Promise<string[]> {
+    const assignments = await this.taskAssignmentRepository.find({
+      where: { taskId },
+    });
+    return assignments.map(assignment => assignment.userId);
   }
 }

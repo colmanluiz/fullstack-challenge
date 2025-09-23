@@ -8,5 +8,6 @@ export interface TaskCreatedEventDto {
   status: string;
   deadline: string;
   createdBy: string;
+  assignees: string[]; // Array of user IDs assigned to the task
   timestamp: string;
 }
