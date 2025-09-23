@@ -4,6 +4,9 @@ import {
   CreateCommentDto,
   CreateTaskDto,
   UpdateTaskDto,
+  TaskCreatedEventDto,
+  TaskUpdatedEventDto,
+  CommentCreatedEventDto,
 } from "@task-management/types";
 
 @Injectable()
@@ -17,8 +20,8 @@ export class EventsService {
     taskId: string,
     createTaskDto: CreateTaskDto,
     userId: string
-  ) {
-    const eventPayload = {
+  ): void {
+    const eventPayload: TaskCreatedEventDto = {
       taskId,
       title: createTaskDto.title,
       description: createTaskDto.description,
@@ -36,8 +39,8 @@ export class EventsService {
     taskId: string,
     updateTaskDto: UpdateTaskDto,
     userId: string
-  ) {
-    const eventPayload = {
+  ): void {
+    const eventPayload: TaskUpdatedEventDto = {
       taskId,
       changes: updateTaskDto,
       updatedBy: userId,
@@ -52,8 +55,8 @@ export class EventsService {
     createCommentDto: CreateCommentDto,
     taskId: string,
     authorId: string
-  ) {
-    const eventPayload = {
+  ): void {
+    const eventPayload: CommentCreatedEventDto = {
       commentId,
       taskId,
       content: createCommentDto.content,

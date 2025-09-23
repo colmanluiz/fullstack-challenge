@@ -9,3 +9,6 @@ export * from "./comments/index";
 
 // Export all notifications types
 export * from "./notifications/index";
+
+// Export all events types
+export * from "./events/index";

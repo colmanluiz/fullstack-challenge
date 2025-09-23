@@ -462,16 +462,63 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
   - RabbitMQ ClientProxy configurado no SharedModule
   - Queue `task_events` com configuração durable
   - Management UI disponível em http://localhost:15672
+- ✅ **Event DTOs** para type safety:
+  - TaskCreatedEventDto, TaskUpdatedEventDto, CommentCreatedEventDto criados
+  - Type safety completa entre Events Service e Notifications Controller
+  - Validação compile-time dos payloads RabbitMQ
+  - Intellisense e refactoring safety para toda a arquitetura de eventos
+
+### ✅ **Notifications Service (Foundation Completa)**
+
+#### Core Implementation
+
+- ✅ **Estrutura básica** criada (NestJS hybrid app: HTTP + WebSocket + RabbitMQ)
+- ✅ **Notification Entity** implementada:
+  - UUID primary key para consistência com outros serviços
+  - Campos: userId, type, title, message, metadata, status, timestamps
+  - Enums: NotificationType (task_assigned, task_updated, comment_created)
+  - Status tracking: unread/read para controle de leitura
+- ✅ **DTOs completos** com validação e Swagger:
+  - CreateNotificationDto, NotificationResponseDto, GetNotificationsDto
+  - MarkAsReadDto, NotificationsListResponseDto, WebSocketNotificationDto
+  - Enums exportados: NotificationType, NotificationStatus, NotificationStatusFilter
+  - Validação com class-validator e documentação @ApiProperty
+- ✅ **NotificationsService** implementado:
+  - `createNotification()` - criação com DTO validation
+  - `getUserNotifications()` - listagem com paginação e filtros inteligentes
+  - `markNotificationAsRead()` - marcação individual com segurança (userId check)
+  - `markAllNotificationsAsRead()` - bulk update para UX melhorada
+  - Filtros: "all" (sem filtro), "unread", "read" com type safety
+- ✅ **Exception Handling** seguindo padrão compartilhado:
+  - NotificationNotFoundException com mensagens internal/external
+  - Integração com @task-management/exceptions package
+  - HTTP 404 status codes apropriados
+- ✅ **Type Safety** completa:
+  - Separação clara entre API filters (NotificationStatusFilter) e entity enums
+  - Solução elegante para filtro "all" sem type casting inseguro
+  - Imports organizados e enums re-exportados para facilidade de uso
+
+#### Arquitetura Preparada
+
+- 🏗️ **WebSocket Gateway** (estrutura criada, implementação pendente)
+- 🏗️ **RabbitMQ Consumer** (estrutura criada, @EventPattern handlers pendentes)
+- 🏗️ **Hybrid Application** configurado para HTTP + WebSocket + RabbitMQ
 
 ### 🚧 **Próximos Passos**
 
-#### 1. Notifications Service (Priority: Alta)
+#### 1. Notifications Service - Event Processing (Priority: Alta)
 
-- Microservice para consumir eventos RabbitMQ
-- WebSocket Gateway para notificações real-time
-- Persistência de notificações no banco
+- Implementar @EventPattern handlers para task.created, task.updated, comment.created
+- Lógica de negócio: determinar quem deve ser notificado para cada evento
+- Transformação de eventos RabbitMQ para notificações de usuário
 
-#### 2. Frontend Implementation (Priority: Média)
+#### 2. Notifications Service - WebSocket & API (Priority: Alta)
+
+- WebSocket connection management e room-based user targeting
+- Real-time notification delivery para frontend
+- HTTP API endpoints para notification management (via API Gateway)
+
+#### 3. Frontend Implementation (Priority: Média)
 
 - React + TanStack Router setup
 - Páginas: Login, Task List, Task Detail com comentários
@@ -479,7 +526,7 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 - WebSocket client para notificações
 - Context/Zustand para state management
 
-#### 3. Integration & Testing (Priority: Baixa)
+#### 4. Integration & Testing (Priority: Baixa)
 
 - E2E testing com todos os serviços
 - Performance testing das APIs
