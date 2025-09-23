@@ -387,16 +387,30 @@ POST   /api/tasks/:taskId/comments              # Criar comentário (protegido)
 GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (protegido)
 ```
 
+**Notifications:**
+
+```bash
+GET    /api/notifications?page=1&limit=10&unreadOnly=false  # Listar notificações (protegido)
+PUT    /api/notifications/:id/read              # Marcar notificação como lida (protegido)
+PUT    /api/notifications/read-all             # Marcar todas como lidas (protegido)
+```
+
 **Swagger Documentation:** `http://localhost:3001/api/docs`
 
 #### Real-Time Notifications System (COMPLETO)
 
 - ✅ **WebSocket Connection**: `ws://localhost:3004`
+- ✅ **JWT Authentication**: WebSocket com validação de token JWT
+- ✅ **Smart Notification Logic**: Notifica pessoas certas (assignees, creators) excluindo quem fez a ação
 - ✅ **Event Flow Testado**: Task creation/update/comment → RabbitMQ → WebSocket
+- ✅ **HTTP API Integration**: Endpoints completos para gerenciar notificações
 - ✅ **Frontend Integration Ready**:
   ```javascript
   const socket = io('http://localhost:3004');
-  socket.emit('authenticate', { userId: 'user-uuid' });
+  socket.emit('authenticate', {
+    userId: 'user-uuid',
+    token: 'jwt-access-token' // Agora com JWT validation!
+  });
   socket.on('notification', (notification) => {
     // Real-time notification received!
   });
@@ -408,15 +422,17 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 
 | Serviço | Status | Funcionalidades |
 |---------|--------|-----------------|
-| **API Gateway (3001)** | ✅ COMPLETO | HTTP routing, rate limiting, Swagger, JWT guards |
+| **API Gateway (3001)** | ✅ COMPLETO | HTTP routing, rate limiting, Swagger, JWT guards, notifications API |
 | **Auth Service (3002)** | ✅ COMPLETO | JWT auth, user management, token refresh |
 | **Tasks Service (3003)** | ✅ COMPLETO | CRUD, comments, assignments, history, events |
-| **Notifications (3004)** | ✅ COMPLETO | RabbitMQ consumer, WebSocket gateway, real-time |
+| **Notifications (3004)** | ✅ COMPLETO | RabbitMQ consumer, WebSocket + JWT auth, HTTP API, smart logic |
 
 **Testado e Funcionando:**
-- ✅ Autenticação JWT completa
-- ✅ CRUD de tasks com comentários
-- ✅ Notificações em tempo real via WebSocket
+- ✅ Autenticação JWT completa (HTTP + WebSocket)
+- ✅ CRUD de tasks com comentários e assignments
+- ✅ Notificações em tempo real via WebSocket com JWT validation
+- ✅ Smart notification targeting (assignees, creators, excluindo action performer)
+- ✅ HTTP API completa para notificações (get, mark read, mark all read)
 - ✅ Comunicação entre microserviços via TCP/RabbitMQ
 - ✅ Rate limiting e segurança
 - ✅ Documentação Swagger completa
@@ -592,20 +608,21 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 
 2. **Ports Mapping Inconsistente**
    - **Problema:** Documentação menciona diferentes portas
-   - **Status:** 🔄 Em revisão
-   - **Impacto:** Confusão na configuração de desenvolvimento
+   - **Status:** ✅ Corrigido
+   - **Solução:** Todos os serviços agora seguem README.md: Auth(3002), Tasks(3003), Notifications(3004)
 
 ### Melhorias Planejadas
 
 #### Curto Prazo
 
-- [ ] **Adicionar endpoints de notificacoes no api gateway** adicionar endpoints HTTP para notificações no API Gateway
+- [x] **Adicionar endpoints de notificacoes no api gateway** ✅ Completo - HTTP API para notificações implementada
+- [x] **WebSocket Authentication** ✅ Completo - JWT validation implementada na autenticação WebSocket
+- [x] **Smart Notification Logic** ✅ Completo - Lógica inteligente de targeting (assignees, creators, excluindo action performer)
 - [ ] **Health Checks** para todos os serviços
 - [ ] **Logging centralizado** com Winston/Pino
 - [ ] **Input sanitization** adicional
 - [ ] **Error handling** padronizado
 - [ ] **Improve DTOs** melhorar validação e mensagens de erro dos DTOs de Tasks e Comments
-- [ ] **WebSocket Authentication** adicionar JWT validation na autenticação do websocket
 - [ ] **Improve auth return messages validations** adicionar validações mais robustas nas mensagens de retorno de autenticação
 
 #### Médio Prazo
