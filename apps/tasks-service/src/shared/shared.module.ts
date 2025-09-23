@@ -14,7 +14,7 @@ import { EventsService } from "./services/events.service";
         transport: Transport.TCP,
         options: {
           host: process.env.AUTH_SERVICE_HOST || "localhost",
-          port: parseInt(process.env.AUTH_SERVICE_PORT as string) || 3003,
+          port: parseInt(process.env.AUTH_SERVICE_PORT as string) || 3002,
         },
       },
       {

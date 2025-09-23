@@ -11,7 +11,7 @@ import { CommentsService } from "./comments.service";
         transport: Transport.TCP,
         options: {
           host: process.env.TASKS_SERVICE_HOST || "localhost",
-          port: parseInt(process.env.TASKS_SERVICE_PORT as string) || 3004,
+          port: parseInt(process.env.TASKS_SERVICE_PORT as string) || 3003,
         },
       },
     ]),

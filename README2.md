@@ -559,12 +559,14 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 
 #### Curto Prazo
 
+- [ ] **Adicionar endpoints de notificacoes no api gateway** adicionar endpoints HTTP para notificações no API Gateway
 - [ ] **Health Checks** para todos os serviços
 - [ ] **Logging centralizado** com Winston/Pino
 - [ ] **Input sanitization** adicional
 - [ ] **Error handling** padronizado
 - [ ] **Improve DTOs** melhorar validação e mensagens de erro dos DTOs de Tasks e Comments
 - [ ] **WebSocket Authentication** adicionar JWT validation na autenticação do websocket
+- [ ] **Improve auth return messages validations** adicionar validações mais robustas nas mensagens de retorno de autenticação
 
 #### Médio Prazo
 
