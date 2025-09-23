@@ -7,6 +7,7 @@ import {
 } from "@nestjs/websockets";
 import { Logger } from "@nestjs/common";
 import { Server, Socket } from "socket.io";
+import * as jwt from "jsonwebtoken";
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -61,11 +62,13 @@ export class NotificationsGateway
   }
 
   @SubscribeMessage("authenticate")
-  handleAuthentication(client: AuthenticatedSocket, data: { userId: string }) {
+  handleAuthentication(
+    client: AuthenticatedSocket,
+    data: { userId: string; token: string }
+  ) {
     try {
-      const { userId } = data;
+      const { userId, token } = data;
 
-      // basic validation
       if (!userId || typeof userId !== "string") {
         client.emit("authentication_failed", {
           error: "Invalid userId provided",
@@ -73,16 +76,59 @@ export class NotificationsGateway
         return;
       }
 
-      // TODO: add JWT token validation here
+      if (!token || typeof token !== "string") {
+        client.emit("authentication_failed", {
+          error: "JWT token required",
+        });
+        return;
+      }
+
+      // JWT token validation
+      let decodedToken: any;
+      try {
+        decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (jwtError) {
+        this.logger.warn(
+          `JWT verification failed for client ${client.id}: ${jwtError.message}`
+        );
+
+        if (jwtError.name === "TokenExpiredError") {
+          client.emit("authentication_failed", {
+            error: "Token expired",
+          });
+        } else if (jwtError.name === "JsonWebTokenError") {
+          client.emit("authentication_failed", {
+            error: "Invalid token",
+          });
+        } else {
+          client.emit("authentication_failed", {
+            error: "Token verification failed",
+          });
+        }
+        return;
+      }
+
+      if (decodedToken.id !== userId) {
+        this.logger.warn(
+          `Token/userId mismatch for client ${client.id}: token=${decodedToken.id}, provided=${userId}`
+        );
+        client.emit("authentication_failed", {
+          error: "Token and userId mismatch",
+        });
+        return;
+      }
+
+      if (client.data?.authTimeout) {
+        clearTimeout(client.data.authTimeout);
+      }
 
       client.userId = userId;
       this.connectedUsers.set(userId, client);
 
-      // join user-specific room
       client.join(`user_${userId}`);
 
       this.logger.log(
-        `User ${userId} authenticated and joined room (${client.id})`
+        `User ${userId} authenticated with JWT and joined room (${client.id})`
       );
 
       client.emit("authenticated", {
@@ -105,7 +151,6 @@ export class NotificationsGateway
     client.emit("pong", { timestamp: new Date().toISOString() });
   }
 
-  // Send notification to specific user
   sendNotificationToUser(userId: string, notification: any) {
     try {
       const userRoom = `user_${userId}`;
