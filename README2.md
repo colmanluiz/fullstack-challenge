@@ -564,6 +564,7 @@ GET    /api/tasks/:taskId/comments?page=1&limit=10  # Listar comentários (prote
 - [ ] **Input sanitization** adicional
 - [ ] **Error handling** padronizado
 - [ ] **Improve DTOs** melhorar validação e mensagens de erro dos DTOs de Tasks e Comments
+- [ ] **WebSocket Authentication** adicionar JWT validation na autenticação do websocket
 
 #### Médio Prazo
 

@@ -9,10 +9,14 @@ import {
   CommentCreatedEventDto,
   NotificationType,
 } from "@task-management/types";
+import { NotificationsGateway } from "../websocket/notifications.gateway";
 
 @Controller()
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly notificationsGateway: NotificationsGateway
+  ) {}
 
   // ===== RabbitMQ Event Handlers =====
 
@@ -29,12 +33,8 @@ export class NotificationsController {
       timestamp,
     } = taskData;
 
-    // Create notification for task creation
-    // Note: In a real app, this might notify team members or managers
-    // For now, we'll create a notification for the task creator
-
     try {
-      await this.notificationsService.createNotification({
+      const notification = await this.notificationsService.createNotification({
         userId: createdBy,
         type: NotificationType.TASK_UPDATED, // Using TASK_UPDATED as general task notification
         title: "Task Created",
@@ -50,6 +50,8 @@ export class NotificationsController {
         },
       });
 
+      this.notificationsGateway.sendNotificationToUser(createdBy, notification);
+
       console.log(`Notification created for task creation: ${taskId}`);
     } catch (error) {
       console.error("Failed to create task creation notification:", error);
@@ -60,15 +62,10 @@ export class NotificationsController {
   async handleTaskUpdated(@Payload() taskData: TaskUpdatedEventDto) {
     const { taskId, changes, updatedBy, timestamp } = taskData;
 
-    // Create notification for task updates
-    // Note: In a real app, we'd query who's assigned to this task
-    // For now, we'll create a notification about the update
-
-    // Determine what changed for better notification message
     const changesList = Object.keys(changes).join(", ");
 
     try {
-      await this.notificationsService.createNotification({
+      const notification = await this.notificationsService.createNotification({
         userId: updatedBy, // For now, notify the person who made the update
         type: NotificationType.TASK_UPDATED,
         title: "Task Updated",
@@ -80,6 +77,8 @@ export class NotificationsController {
         },
       });
 
+      this.notificationsGateway.sendNotificationToUser(updatedBy, notification);
+
       console.log(`Notification created for task update: ${taskId}`);
     } catch (error) {
       console.error("Failed to create task update notification:", error);
@@ -90,15 +89,11 @@ export class NotificationsController {
   async handleCommentCreated(@Payload() commentData: CommentCreatedEventDto) {
     const { commentId, taskId, content, authorId, timestamp } = commentData;
 
-    // Create notification for new comment
-    // Note: In a real app, we'd query who's assigned to this task and notify them
-    // excluding the comment author. For now, we'll create a notification for the author
-
     const truncatedContent =
       content.length > 50 ? content.substring(0, 50) + "..." : content;
 
     try {
-      await this.notificationsService.createNotification({
+      const notification = await this.notificationsService.createNotification({
         userId: authorId, // For now, notify the comment author
         type: NotificationType.COMMENT_CREATED,
         title: "Comment Added",
@@ -111,6 +106,8 @@ export class NotificationsController {
           timestamp,
         },
       });
+
+      this.notificationsGateway.sendNotificationToUser(authorId, notification);
 
       console.log(`Notification created for comment: ${commentId}`);
     } catch (error) {

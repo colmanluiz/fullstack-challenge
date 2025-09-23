@@ -4,7 +4,6 @@ export * from "./notification-response.dto";
 export * from "./get-notifications.dto";
 export * from "./mark-as-read.dto";
 export * from "./notifications-list-response.dto";
-export * from "./websocket-notification.dto";
 
 // Re-export enums for convenience
 export { NotificationStatus } from "./notification-response.dto";
