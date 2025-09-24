@@ -1,7 +1,9 @@
 import { useId } from 'react'
-import { HouseIcon, InboxIcon, ZapIcon } from 'lucide-react'
+import { LayoutDashboard, LucideListTodo } from 'lucide-react'
 
 import Logo from '@/components/navbar-components/logo'
+import NotificationMenu from '@/components/navbar-components/notification-menu'
+import UserMenu from '@/components/navbar-components/user-menu'
 import { Button } from '@/components/ui/button'
 import {
   NavigationMenu,
@@ -20,9 +22,8 @@ import { useAuth } from '@/context/AuthContext'
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
-  { href: '#', label: 'Home', icon: HouseIcon, active: true },
-  { href: '#', label: 'Inbox', icon: InboxIcon },
-  { href: '#', label: 'Insights', icon: ZapIcon },
+  { href: '#', label: 'Dashboard', icon: LayoutDashboard, active: true },
+  { href: '#', label: 'Tasks', icon: LucideListTodo },
 ]
 
 export default function Navbar() {
@@ -128,13 +129,11 @@ export default function Navbar() {
         </NavigationMenu>
         {/* Right side */}
         {user && isAuthenticated ? (
-          <div className="flex flex-1 items-center justify-end gap-2">
-            <Button asChild variant="ghost" size="sm" className="text-sm">
-              <Link to="/profile">Profile</Link>
-            </Button>
-            <Button asChild size="sm" className="text-sm">
-              <Link to="/settings">Settings</Link>
-            </Button>
+          <div className="flex flex-1 items-center justify-end gap-4">
+            {/* Notification */}
+            <NotificationMenu />
+            {/* User menu */}
+            <UserMenu />
             <ThemeToggle />
           </div>
         ) : (
