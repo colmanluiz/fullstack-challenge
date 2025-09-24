@@ -2,18 +2,17 @@ import * as React from 'react'
 import {
   IconCamera,
   IconDashboard,
-  IconDatabase,
   IconFileAi,
   IconFileDescription,
-  IconFileWord,
   IconHelp,
-  IconInnerShadowTop,
-  IconReport,
   IconSearch,
   IconSettings,
+  IconUsers,
+  IconChartBar,
+  IconCalendar,
 } from '@tabler/icons-react'
 
-import { NavDocuments } from '@/components/nav-documents'
+import { NavTasks } from '@/components/nav-tasks'
 import { NavMain } from '@/components/nav-main'
 import { NavSecondary } from '@/components/nav-secondary'
 import {
@@ -24,19 +23,38 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { ListTodo } from 'lucide-react'
+import { GalleryVerticalEnd } from 'lucide-react'
 
 const data = {
   navMain: [
     {
       title: 'Dashboard',
-      url: '#',
+      url: '/',
       icon: IconDashboard,
+      isActive: true,
+      badge: {
+        text: 'New',
+        variant: 'default' as const
+      }
     },
     {
-      title: 'Tasks',
-      url: '#',
-      icon: ListTodo,
+      title: 'Analytics',
+      url: '/analytics',
+      icon: IconChartBar,
+    },
+    {
+      title: 'Team',
+      url: '/team',
+      icon: IconUsers,
+      badge: {
+        text: '5',
+        variant: 'secondary' as const
+      }
+    },
+    {
+      title: 'Calendar',
+      url: '/calendar',
+      icon: IconCalendar,
     },
   ],
   navClouds: [
@@ -104,23 +122,6 @@ const data = {
       icon: IconSearch,
     },
   ],
-  documents: [
-    {
-      name: 'Data Library',
-      url: '#',
-      icon: IconDatabase,
-    },
-    {
-      name: 'Reports',
-      url: '#',
-      icon: IconReport,
-    },
-    {
-      name: 'Word Assistant',
-      url: '#',
-      icon: IconFileWord,
-    },
-  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -129,13 +130,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
+            <SidebarMenuButton size="lg" asChild>
               <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <GalleryVerticalEnd className="size-4" />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-medium">Documentation</span>
+                  <span className="">v1.0.0</span>
+                </div>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -143,7 +146,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        <NavTasks />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
     </Sidebar>
