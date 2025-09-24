@@ -5,6 +5,7 @@ import { TanstackDevtools } from '@tanstack/react-devtools'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import type { QueryClient } from '@tanstack/react-query'
+import Navbar from '@/components/navbar'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -13,6 +14,7 @@ interface MyRouterContext {
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: () => (
     <div className="min-h-screen">
+      <Navbar />
       <main className="flex-1">
         <Outlet />
       </main>
