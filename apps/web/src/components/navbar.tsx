@@ -5,17 +5,6 @@ import Logo from '@/components/navbar-components/logo'
 import NotificationMenu from '@/components/navbar-components/notification-menu'
 import UserMenu from '@/components/navbar-components/user-menu'
 import { Button } from '@/components/ui/button'
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from '@/components/ui/navigation-menu'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import ThemeToggle from './navbar-components/theme-toggle'
 import { Link } from '@tanstack/react-router'
 import { useAuth } from '@/context/AuthContext'
