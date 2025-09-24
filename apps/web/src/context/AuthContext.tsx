@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (accessToken && refreshToken) {
         try {
+          // TODO: We could verify the token with the backend here
           // for now, only assume if tokens exist, the user is logged in
           console.log('found existing tokens, user is logged in')
 

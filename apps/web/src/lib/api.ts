@@ -4,7 +4,7 @@ import axios, {
   type AxiosResponse,
 } from 'axios'
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api'
+const API_BASE_URL = 'http://localhost:3001/api' // todo: move to env variable
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -47,7 +47,6 @@ apiClient.interceptors.request.use(
   },
 )
 
-// This runs AFTER every API response and handles token refresh automatically
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log(`✅ API Response: ${response.status} ${response.config.url}`)
@@ -56,8 +55,6 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // 📚 LEARNING: Handle 401 (Unauthorized) errors
-    // If access token is expired, try to refresh it automatically
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
@@ -67,7 +64,6 @@ apiClient.interceptors.response.use(
         try {
           console.log('🔄 Attempting token refresh...')
 
-          // Call refresh endpoint (without interceptor to avoid infinite loop)
           const refreshResponse = await axios.post(
             `${API_BASE_URL}/auth/refresh`,
             {
@@ -83,10 +79,8 @@ apiClient.interceptors.response.use(
           const { accessToken, refreshToken: newRefreshToken } =
             refreshResponse.data
 
-          // Update stored tokens
           tokenStorage.setTokens(accessToken, newRefreshToken)
 
-          // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${accessToken}`
 
           console.log('✅ Token refreshed successfully')
@@ -94,10 +88,9 @@ apiClient.interceptors.response.use(
         } catch (refreshError) {
           console.error('❌ Token refresh failed:', refreshError)
 
-          // Refresh failed, clear tokens and redirect to login
           tokenStorage.clearTokens()
 
-          // 📚 LEARNING: In a real app, you'd redirect to login here
+          // TODO: Redirect to login page
           window.location.href = '/login'
 
           return Promise.reject(refreshError)
