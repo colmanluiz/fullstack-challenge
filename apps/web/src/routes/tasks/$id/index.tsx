@@ -19,7 +19,7 @@ import { type Task, TASK_STATUSES, TASK_PRIORITIES } from '@/types/task'
 import { AddCommentForm } from '@/components/tasks/AddCommentForm'
 import { CommentsList } from '@/components/tasks/CommentsList'
 
-export const Route = createFileRoute('/tasks/$id')({
+export const Route = createFileRoute('/tasks/$id/')({
   component: TaskDetailPage,
 })
 
@@ -256,7 +256,7 @@ function TaskDetailPage() {
               taskId={id}
               onCommentAdded={() => {
                 // Refresh comments list when a new comment is added
-                setCommentsListKey(prev => prev + 1)
+                setCommentsListKey((prev) => prev + 1)
               }}
             />
 

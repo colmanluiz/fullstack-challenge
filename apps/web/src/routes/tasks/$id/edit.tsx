@@ -70,7 +70,14 @@ function EditTaskPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <TaskForm mode="edit" task={task} />
+      <TaskForm
+        mode="edit"
+        task={task}
+        onSuccess={() => {
+          console.log('✅ Task updated successfully, navigating back...')
+          window.location.href = `/tasks/${id}`
+        }}
+      />
     </div>
   )
 }
