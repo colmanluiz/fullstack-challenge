@@ -1,7 +1,8 @@
 'use client'
 
 import { type Row } from '@tanstack/react-table'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Edit, Eye } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -43,9 +44,19 @@ export function DataTableRowActions<TData>({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem>Edit</DropdownMenuItem>
+        <Link to="/tasks/$id" params={{ id: task.id }}>
+          <DropdownMenuItem className="gap-2">
+            <Eye className="h-4 w-4" />
+            View
+          </DropdownMenuItem>
+        </Link>
+        <Link to="/tasks/$id/edit" params={{ id: task.id }}>
+          <DropdownMenuItem className="gap-2">
+            <Edit className="h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+        </Link>
         <DropdownMenuItem>Make a copy</DropdownMenuItem>
-        <DropdownMenuItem>Favorite</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>

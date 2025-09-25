@@ -47,7 +47,12 @@ export default function Navbar() {
           </div>
         </div>
         {/* Right side */}
-        {user && isAuthenticated ? (
+        {isLoading ? (
+          <div className="flex items-center justify-end gap-4">
+            <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+            <ThemeToggle />
+          </div>
+        ) : isAuthenticated ? (
           <div className="flex items-center justify-end gap-4">
             {/* Notification */}
             <NotificationMenu />
