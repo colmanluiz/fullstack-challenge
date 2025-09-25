@@ -5,13 +5,14 @@ import {
   type UpdateTaskRequest,
   type Comment,
   type CreateCommentRequest,
+  type TaskHistory,
 } from '../types/task'
 
 export const taskApi = {
   async getTasks(
     page: number = 1,
     limit: number = 10,
-  ): Promise<{ tasks: Task[]; total: number }> {
+  ): Promise<{ tasks: Array<Task>; total: number }> {
     const response = await apiClient.get(`/tasks?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -35,7 +36,7 @@ export const taskApi = {
     await apiClient.delete(`/tasks/${id}`)
   },
 
-  async getTaskComments(taskId: string): Promise<Comment[]> {
+  async getTaskComments(taskId: string): Promise<Array<Comment>> {
     const response = await apiClient.get(`/tasks/${taskId}/comments`)
     return response.data
   },
@@ -44,6 +45,11 @@ export const taskApi = {
     const response = await apiClient.post(`/tasks/${data.taskId}/comments`, {
       content: data.content,
     })
+    return response.data
+  },
+
+  async getTaskHistory(taskId: string): Promise<Array<TaskHistory>> {
+    const response = await apiClient.get(`/tasks/${taskId}/history`)
     return response.data
   },
 }
@@ -56,4 +62,5 @@ export const {
   deleteTask,
   getTaskComments,
   createComment,
+  getTaskHistory,
 } = taskApi

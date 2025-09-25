@@ -1,7 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Edit, ArrowLeft, Clock, User, Flag } from 'lucide-react'
+import { Edit, ArrowLeft, Clock, User, Flag, Trash2, CheckCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -13,11 +13,23 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 import { taskApi } from '@/services/taskApi'
-import { type Task, TASK_STATUSES, TASK_PRIORITIES } from '@/types/task'
+import { type Task, TASK_STATUSES, TASK_PRIORITIES, TaskStatus } from '@/types/task'
 import { AddCommentForm } from '@/components/tasks/AddCommentForm'
 import { CommentsList } from '@/components/tasks/CommentsList'
+import { TaskHistory } from '@/components/tasks/TaskHistory'
 
 export const Route = createFileRoute('/tasks/$id/')({
   component: TaskDetailPage,
@@ -25,11 +37,14 @@ export const Route = createFileRoute('/tasks/$id/')({
 
 function TaskDetailPage() {
   const { id } = Route.useParams()
+  const navigate = useNavigate()
   const [task, setTask] = useState<Task | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [commentsCount, setCommentsCount] = useState<number>(0)
   const [commentsListKey, setCommentsListKey] = useState<number>(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isCompleting, setIsCompleting] = useState(false)
 
   // later, we'll replace this with TanStack Query
   useEffect(() => {
@@ -50,6 +65,42 @@ function TaskDetailPage() {
 
     fetchTask()
   }, [id])
+
+  const handleDeleteTask = async () => {
+    if (!task) return
+
+    try {
+      setIsDeleting(true)
+      console.log('🗑️ Deleting task:', task.title)
+      await taskApi.deleteTask(task.id)
+      console.log('✅ Task deleted successfully')
+      navigate({ to: '/tasks' })
+    } catch (err) {
+      console.error('❌ Failed to delete task:', err)
+      setError('Failed to delete task. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleCompleteTask = async () => {
+    if (!task) return
+
+    try {
+      setIsCompleting(true)
+      console.log('✅ Marking task as complete:', task.title)
+      const updatedTask = await taskApi.updateTask(task.id, {
+        status: TaskStatus.DONE
+      })
+      setTask(updatedTask)
+      console.log('✅ Task marked as complete')
+    } catch (err) {
+      console.error('❌ Failed to complete task:', err)
+      setError('Failed to complete task. Please try again.')
+    } finally {
+      setIsCompleting(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -132,12 +183,71 @@ function TaskDetailPage() {
               Back to Tasks
             </Button>
           </Link>
-          <Link to="/tasks/$id/edit" params={{ id: task.id }}>
-            <Button className="gap-2">
-              <Edit className="h-4 w-4" />
-              Edit Task
-            </Button>
-          </Link>
+
+          <div className="flex items-center gap-3">
+            {/* Complete Task Button */}
+            {task.status !== TaskStatus.DONE && (
+              <Button
+                onClick={handleCompleteTask}
+                disabled={isCompleting}
+                variant="outline"
+                className="gap-2 text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700 hover:border-green-400"
+              >
+                {isCompleting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                {isCompleting ? 'Completing...' : 'Mark Complete'}
+              </Button>
+            )}
+
+            {/* Edit Button */}
+            <Link to="/tasks/$id/edit" params={{ id: task.id }}>
+              <Button className="gap-2">
+                <Edit className="h-4 w-4" />
+                Edit Task
+              </Button>
+            </Link>
+
+            {/* Delete Button with Confirmation */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="gap-2 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700 hover:border-red-400"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{task.title}"? This action cannot be undone and will also remove all associated comments.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteTask}
+                    disabled={isDeleting}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete Task'
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Task details card */}
@@ -270,6 +380,9 @@ function TaskDetailPage() {
             />
           </CardContent>
         </Card>
+
+        {/* Task History section */}
+        <TaskHistory taskId={id} />
       </div>
     </div>
   )

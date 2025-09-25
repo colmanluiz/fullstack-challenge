@@ -5,7 +5,7 @@ export interface Task {
   deadline: string
   status: TaskStatus
   priority: TaskPriority
-  assignees: string[]
+  assignees: Array<string>
   createdBy: string
   createdAt: string
   updatedAt: string
@@ -39,6 +39,16 @@ export interface Comment {
 export interface CreateCommentRequest {
   content: string
   taskId: string
+}
+
+export interface TaskHistory {
+  id: string
+  taskId: string
+  userId: string
+  action: string
+  previousValue: any
+  newValue: any
+  createdAt: string
 }
 
 export enum TaskStatus {
