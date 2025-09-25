@@ -9,15 +9,15 @@ async function bootstrap() {
     {
       transport: Transport.TCP,
       options: {
-        host: process.env.TASKS_SERVICE_HOST || "localhost",
-        port: parseInt(process.env.TASKS_SERVICE_PORT as string) || 3004,
+        host: "0.0.0.0", // Bind to all interfaces for Docker networking
+        port: parseInt(process.env.MICROSERVICE_PORT as string) || 3003,
       },
     }
   );
 
   await app.listen();
   Logger.log(
-    `Tasks service microservice running on TCP port ${process.env.TASKS_SERVICE_PORT || 3004}`
+    `Tasks service microservice running on TCP port ${process.env.MICROSERVICE_PORT || 3003}`
   );
 }
 

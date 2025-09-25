@@ -89,11 +89,11 @@ services:
       - NODE_ENV=development
       - MICROSERVICE_PORT=3003
       # Database Configuration
-      - DATABASE_HOST=db
-      - DATABASE_PORT=5432
-      - DATABASE_USERNAME=postgres
-      - DATABASE_PASSWORD=password
-      - DATABASE_NAME=challenge_db
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=challenge_db
       # Auth Service Configuration
       - AUTH_SERVICE_HOST=auth-service
       - AUTH_SERVICE_PORT=3002
