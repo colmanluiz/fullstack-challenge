@@ -16,6 +16,8 @@ import { Separator } from '@/components/ui/separator'
 
 import { taskApi } from '@/services/taskApi'
 import { type Task, TASK_STATUSES, TASK_PRIORITIES } from '@/types/task'
+import { AddCommentForm } from '@/components/tasks/AddCommentForm'
+import { CommentsList } from '@/components/tasks/CommentsList'
 
 export const Route = createFileRoute('/tasks/$id')({
   component: TaskDetailPage,
@@ -26,6 +28,8 @@ function TaskDetailPage() {
   const [task, setTask] = useState<Task | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [commentsCount, setCommentsCount] = useState<number>(0)
+  const [commentsListKey, setCommentsListKey] = useState<number>(0)
 
   // later, we'll replace this with TanStack Query
   useEffect(() => {
@@ -231,18 +235,39 @@ function TaskDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Comments section placeholder */}
+        {/* Comments section */}
         <Card>
           <CardHeader>
-            <CardTitle>Comments</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Comments
+              {commentsCount > 0 && (
+                <Badge variant="secondary" className="h-5 px-2 text-xs">
+                  {commentsCount}
+                </Badge>
+              )}
+            </CardTitle>
             <CardDescription>
-              Task comments will be displayed here
+              Collaborate on this task with your team
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-center py-8">
-              Comments feature coming soon...
-            </p>
+          <CardContent className="space-y-6">
+            {/* Add comment form */}
+            <AddCommentForm
+              taskId={id}
+              onCommentAdded={() => {
+                // Refresh comments list when a new comment is added
+                setCommentsListKey(prev => prev + 1)
+              }}
+            />
+
+            <Separator />
+
+            {/* Comments list */}
+            <CommentsList
+              key={commentsListKey}
+              taskId={id}
+              onCommentsLoad={(count) => setCommentsCount(count)}
+            />
           </CardContent>
         </Card>
       </div>
