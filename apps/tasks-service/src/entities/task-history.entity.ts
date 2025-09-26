@@ -25,7 +25,7 @@ export class TaskHistory {
   @Column({ type: "json", nullable: true })
   previousValue: any;
 
-  @Column({ type: "json" })
+  @Column({ type: "json", nullable: true })
   newValue: any;
 
   @CreateDateColumn()
