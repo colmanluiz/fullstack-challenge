@@ -41,9 +41,9 @@ export class TasksService {
     );
   }
 
-  async assignUserToTask(userId: string, taskId: string) {
+  async createTaskAssignment(userId: string, taskId: string) {
     return firstValueFrom(
-      this.tasksClient.send("assign_users_to_task", { userId, taskId })
+      this.tasksClient.send("create_task_assignment", { userId, taskId })
     );
   }
 

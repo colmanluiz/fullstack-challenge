@@ -48,10 +48,12 @@ export class TasksController {
     return this.tasksService.deleteTask(taskId, userId);
   }
 
-  @MessagePattern("assign_users_to_task")
-  async assignUsersToTask(@Payload() data: { userId: string; taskId: string }) {
+  @MessagePattern("create_task_assignment")
+  async createTaskAssignment(
+    @Payload() data: { userId: string; taskId: string }
+  ) {
     const { userId, taskId } = data;
-    return this.tasksService.assignUsersToTask(userId, taskId);
+    return this.tasksService.createTaskAssignment(userId, taskId);
   }
 
   @MessagePattern("get_task_history")

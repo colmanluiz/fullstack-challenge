@@ -84,12 +84,12 @@ export class TasksController {
   @ApiOperation({ summary: "Assign user to task" })
   @ApiResponse({ status: 200, description: "User assigned successfully" })
   @ApiResponse({ status: 404, description: "Task not found" })
-  async assignUserToTask(
+  async createTaskAssignment(
     @Param("id") taskId: string,
     @Body() data: { userId: string },
     @Request() req
   ) {
-    return this.tasksService.assignUserToTask(data.userId, taskId);
+    return this.tasksService.createTaskAssignment(data.userId, taskId);
   }
 
   @Get(":id/history")

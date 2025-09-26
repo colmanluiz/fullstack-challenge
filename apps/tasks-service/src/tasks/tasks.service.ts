@@ -68,10 +68,12 @@ export class TasksService {
     // Transform tasks to include assignees with user data
     const tasksWithAssignees = await Promise.all(
       tasks.map(async (task) => {
-        const userIds = task.assignments?.map(assignment => assignment.userId) || [];
-        const assignees = userIds.length > 0
-          ? await this.validationService.getUsersByIds(userIds)
-          : [];
+        const userIds =
+          task.assignments?.map((assignment) => assignment.userId) || [];
+        const assignees =
+          userIds.length > 0
+            ? await this.validationService.getUsersByIds(userIds)
+            : [];
 
         return {
           ...task,
@@ -108,10 +110,12 @@ export class TasksService {
     }
 
     // Add assignees with user data to the response
-    const userIds = task.assignments?.map(assignment => assignment.userId) || [];
-    const assignees = userIds.length > 0
-      ? await this.validationService.getUsersByIds(userIds)
-      : [];
+    const userIds =
+      task.assignments?.map((assignment) => assignment.userId) || [];
+    const assignees =
+      userIds.length > 0
+        ? await this.validationService.getUsersByIds(userIds)
+        : [];
 
     return {
       ...task,
@@ -178,7 +182,7 @@ export class TasksService {
     return { message: `Task with ID ${taskId} has been deleted.` };
   }
 
-  async assignUsersToTask(userId: string, taskId: string) {
+  async createTaskAssignment(userId: string, taskId: string) {
     await this.validationService.validateUserExists(userId);
     await this.validationService.validateTaskExists(taskId);
 
@@ -195,7 +199,11 @@ export class TasksService {
       taskId,
     });
 
-    const savedAssignment = await this.taskAssignmentRepository.save(newTaskAssignment);
+    const savedAssignment =
+      await this.taskAssignmentRepository.save(newTaskAssignment);
+
+    this.eventsService;
+
     return savedAssignment;
   }
 
@@ -229,6 +237,6 @@ export class TasksService {
     const assignments = await this.taskAssignmentRepository.find({
       where: { taskId },
     });
-    return assignments.map(assignment => assignment.userId);
+    return assignments.map((assignment) => assignment.userId);
   }
 }
