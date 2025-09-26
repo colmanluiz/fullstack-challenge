@@ -1,63 +1,38 @@
-import { useState } from "react"
-import { BellIcon } from "lucide-react"
+import { useEffect, useState } from 'react'
+import { BellIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from '@/components/ui/popover'
+import { NotificationStatus, type Notification } from '@/types/notification'
+import { notificationsSocket } from '@/services/notificationsSocket'
+import { notificationApi } from '@/services/notificationApi'
+import { tokenStorage } from '@/lib/api'
 
-const initialNotifications = [
-  {
-    id: 1,
-    user: "Chris Tompson",
-    action: "requested review on",
-    target: "PR #42: Feature implementation",
-    timestamp: "15 minutes ago",
-    unread: true,
-  },
-  {
-    id: 2,
-    user: "Emma Davis",
-    action: "shared",
-    target: "New component library",
-    timestamp: "45 minutes ago",
-    unread: true,
-  },
-  {
-    id: 3,
-    user: "James Wilson",
-    action: "assigned you to",
-    target: "API integration task",
-    timestamp: "4 hours ago",
-    unread: false,
-  },
-  {
-    id: 4,
-    user: "Alex Morgan",
-    action: "replied to your comment in",
-    target: "Authentication flow",
-    timestamp: "12 hours ago",
-    unread: false,
-  },
-  {
-    id: 5,
-    user: "Sarah Chen",
-    action: "commented on",
-    target: "Dashboard redesign",
-    timestamp: "2 days ago",
-    unread: false,
-  },
-  {
-    id: 6,
-    user: "Miky Derya",
-    action: "mentioned you in",
-    target: "Origin UI open graph image",
-    timestamp: "2 weeks ago",
-    unread: false,
-  },
-]
+const formatNotificationDate = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffInSeconds < 60) return 'Just now'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  })
+}
+
+interface NotificationMenuProps {
+  userId: string
+}
 
 function Dot({ className }: { className?: string }) {
   return (
@@ -75,27 +50,114 @@ function Dot({ className }: { className?: string }) {
   )
 }
 
-export default function NotificationMenu() {
-  const [notifications, setNotifications] = useState(initialNotifications)
-  const unreadCount = notifications.filter((n) => n.unread).length
+export default function NotificationMenu({ userId }: NotificationMenuProps) {
+  const [notifications, setNotifications] = useState<Array<Notification>>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(
-      notifications.map((notification) => ({
-        ...notification,
-        unread: false,
-      }))
-    )
+  useEffect(() => {
+    const loadNotifications = async () => {
+      try {
+        setIsLoading(true)
+        const existingNotifications = await notificationApi.getNotifications()
+        setNotifications(existingNotifications)
+      } catch (error) {
+        console.error('Failed to load notifications:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadNotifications()
+  }, [])
+
+  useEffect(() => {
+    if (!userId) {
+      return
+    }
+
+    function onConnect() {
+      const token = tokenStorage.getAccessToken()
+      if (token && userId) {
+        notificationsSocket.emit('authenticate', { token, userId })
+      }
+    }
+
+    function onDisconnect() {}
+
+    function onAuthenticate(data: { success: boolean; message?: string }) {
+      if (!data.success) {
+        console.error('WebSocket authentication failed:', data.message)
+      }
+    }
+
+    function onNewNotification(notification: Notification) {
+      setNotifications((prev) => [notification, ...prev])
+
+      toast(notification.title || 'New Notification', {
+        description: notification.message,
+        duration: 4000,
+      })
+    }
+
+    notificationsSocket.off('connect', onConnect)
+    notificationsSocket.off('disconnect', onDisconnect)
+    notificationsSocket.off('authenticated', onAuthenticate)
+    notificationsSocket.off('notification', onNewNotification)
+
+    notificationsSocket.on('connect', onConnect)
+    notificationsSocket.on('disconnect', onDisconnect)
+    notificationsSocket.on('authenticated', onAuthenticate)
+    notificationsSocket.on('notification', onNewNotification)
+
+    if (notificationsSocket.connected) {
+      const token = tokenStorage.getAccessToken()
+      if (token && userId) {
+        notificationsSocket.emit('authenticate', { token, userId })
+      }
+    }
+
+    return () => {
+      notificationsSocket.off('connect', onConnect)
+      notificationsSocket.off('disconnect', onDisconnect)
+      notificationsSocket.off('authenticated', onAuthenticate)
+      notificationsSocket.off('notification', onNewNotification)
+    }
+  }, [userId])
+
+  const unreadCount = Array.isArray(notifications)
+    ? notifications.filter((n) => n.status === NotificationStatus.UNREAD).length
+    : 0
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationApi.markAllAsRead()
+      setNotifications(
+        notifications.map((notification) => ({
+          ...notification,
+          status: NotificationStatus.READ,
+        })),
+      )
+      toast.success('All notifications marked as read')
+    } catch (error) {
+      console.error('Failed to mark all as read:', error)
+      toast.error('Failed to mark notifications as read')
+    }
   }
 
-  const handleNotificationClick = (id: number) => {
-    setNotifications(
-      notifications.map((notification) =>
-        notification.id === id
-          ? { ...notification, unread: false }
-          : notification
+  const handleNotificationClick = async (id: string) => {
+    try {
+      await notificationApi.markAsRead(id)
+      setNotifications(
+        notifications.map((notification) =>
+          notification.id === id
+            ? { ...notification, status: NotificationStatus.READ }
+            : notification,
+        ),
       )
-    )
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
+      toast.error('Failed to mark notification as read')
+    }
   }
 
   return (
@@ -133,39 +195,53 @@ export default function NotificationMenu() {
           aria-orientation="horizontal"
           className="bg-border -mx-1 my-1 h-px"
         ></div>
-        {notifications.map((notification) => (
-          <div
-            key={notification.id}
-            className="hover:bg-accent rounded-md px-3 py-2 text-sm transition-colors"
-          >
-            <div className="relative flex items-start pe-3">
-              <div className="flex-1 space-y-1">
-                <button
-                  className="text-foreground/80 text-left after:absolute after:inset-0"
-                  onClick={() => handleNotificationClick(notification.id)}
-                >
-                  <span className="text-foreground font-medium hover:underline">
-                    {notification.user}
-                  </span>{" "}
-                  {notification.action}{" "}
-                  <span className="text-foreground font-medium hover:underline">
-                    {notification.target}
-                  </span>
-                  .
-                </button>
-                <div className="text-muted-foreground text-xs">
-                  {notification.timestamp}
-                </div>
-              </div>
-              {notification.unread && (
-                <div className="absolute end-0 self-center">
-                  <span className="sr-only">Unread</span>
-                  <Dot />
-                </div>
-              )}
+        {isLoading ? (
+          <div className="px-3 py-4 text-center">
+            <div className="text-sm text-muted-foreground">
+              Loading notifications...
             </div>
           </div>
-        ))}
+        ) : notifications.length === 0 ? (
+          <div className="px-3 py-4 text-center">
+            <div className="text-sm text-muted-foreground">
+              No notifications yet
+            </div>
+          </div>
+        ) : (
+          notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className="hover:bg-accent rounded-md px-3 py-2 text-sm transition-colors"
+            >
+              <div className="relative flex items-start pe-3">
+                <div className="flex-1 space-y-1">
+                  <button
+                    className="text-foreground/80 text-left after:absolute after:inset-0"
+                    onClick={() => handleNotificationClick(notification.id)}
+                  >
+                    <span className="text-foreground font-medium hover:underline">
+                      {notification.metadata?.title || 'Task'}
+                    </span>{' '}
+                    {notification.message}{' '}
+                    <span className="text-foreground font-medium hover:underline">
+                      {notification.title}
+                    </span>
+                    .
+                  </button>
+                  <div className="text-muted-foreground text-xs">
+                    {formatNotificationDate(notification.createdAt)}
+                  </div>
+                </div>
+                {notification.status === NotificationStatus.UNREAD && (
+                  <div className="absolute end-0 self-center">
+                    <span className="sr-only">Unread</span>
+                    <Dot />
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </PopoverContent>
     </Popover>
   )

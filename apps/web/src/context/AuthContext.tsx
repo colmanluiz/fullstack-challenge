@@ -7,6 +7,7 @@ import {
   type LoginRequest,
   type RegisterRequest,
 } from '@/types/auth'
+import { toast } from 'sonner'
 import React, {
   createContext,
   useContext,
@@ -45,14 +46,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (accessToken && refreshToken) {
         try {
-          // TODO: We could verify the token with the backend here
-          // for now, only assume if tokens exist, the user is logged in
-          console.log('found existing tokens, user is logged in')
+          console.log('🔍 Found existing tokens, checking authentication...')
 
+          // Get current user data from the backend
+          const userData = await authApi.getCurrentUser()
+          setUser(userData)
           setIsAuthenticated(true)
+
+          console.log('✅ User authenticated successfully:', userData.username)
         } catch (error) {
-          console.error('token validation failed', error)
+          console.error('❌ Token validation failed:', error)
           tokenStorage.clearTokens()
+          setIsAuthenticated(false)
+          setUser(null)
         }
       }
 
@@ -65,7 +71,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginRequest): Promise<void> => {
     try {
       setIsLoading(true)
-      console.log('attempting login..')
 
       const response = await authApi.login(credentials)
 
@@ -74,9 +79,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(response.user)
       setIsAuthenticated(true)
 
-      console.log('login successful', response.user.username)
+      toast.success(`Welcome back, ${response.user.username}!`)
     } catch (error) {
-      console.error('login failed: ', error)
+      console.error('Login failed:', error)
+      toast.error('Login failed. Please check your credentials.')
       throw error
     } finally {
       setIsLoading(false)
@@ -86,7 +92,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (data: RegisterRequest): Promise<void> => {
     try {
       setIsLoading(true)
-      console.log('attempting registration..')
 
       const response = await authApi.register(data)
 
@@ -95,9 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(response.user)
       setIsAuthenticated(true)
 
-      console.log('registration successful', response.user.username)
+      toast.success(`Welcome to the app, ${response.user.username}!`)
     } catch (error) {
-      console.error('registration failed: ', error)
+      console.error('Registration failed:', error)
+      toast.error('Registration failed. Please try again.')
       throw error
     } finally {
       setIsLoading(false)
@@ -112,13 +118,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await authApi.logout(refreshToken)
       }
     } catch (error) {
-      console.error('logout failed: ', error)
+      console.error('Logout failed:', error)
     } finally {
       tokenStorage.clearTokens()
       setUser(null)
       setIsAuthenticated(false)
 
-      console.log('user logged out')
+      toast.success('Logged out successfully')
     }
   }
 

@@ -55,7 +55,7 @@ export default function Navbar() {
         ) : isAuthenticated ? (
           <div className="flex items-center justify-end gap-4">
             {/* Notification */}
-            <NotificationMenu />
+            <NotificationMenu userId={user?.id} />
             {/* User menu */}
             <UserMenu />
             <ThemeToggle />

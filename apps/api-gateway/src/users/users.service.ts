@@ -15,4 +15,8 @@ export class UsersService {
   async getUserById(userId: string) {
     return firstValueFrom(this.usersClient.send("get_user_by_id", { userId }));
   }
+
+  async getCurrentUser(userId: string) {
+    return firstValueFrom(this.usersClient.send("get_current_user", { userId }));
+  }
 }

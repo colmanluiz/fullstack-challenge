@@ -70,15 +70,17 @@ export class NotificationsGateway
       const { userId, token } = data;
 
       if (!userId || typeof userId !== "string") {
-        client.emit("authentication_failed", {
-          error: "Invalid userId provided",
+        client.emit("authenticated", {
+          success: false,
+          message: "Invalid userId provided",
         });
         return;
       }
 
       if (!token || typeof token !== "string") {
-        client.emit("authentication_failed", {
-          error: "JWT token required",
+        client.emit("authenticated", {
+          success: false,
+          message: "JWT token required",
         });
         return;
       }
@@ -93,27 +95,28 @@ export class NotificationsGateway
         );
 
         if (jwtError.name === "TokenExpiredError") {
-          client.emit("authentication_failed", {
-            error: "Token expired",
+          client.emit("authenticated", {
+            success: false,
+            message: "Token expired",
           });
         } else if (jwtError.name === "JsonWebTokenError") {
-          client.emit("authentication_failed", {
-            error: "Invalid token",
+          client.emit("authenticated", {
+            success: false,
+            message: "Invalid token",
           });
         } else {
-          client.emit("authentication_failed", {
-            error: "Token verification failed",
+          client.emit("authenticated", {
+            success: false,
+            message: "Token verification failed",
           });
         }
         return;
       }
 
-      if (decodedToken.id !== userId) {
-        this.logger.warn(
-          `Token/userId mismatch for client ${client.id}: token=${decodedToken.id}, provided=${userId}`
-        );
-        client.emit("authentication_failed", {
-          error: "Token and userId mismatch",
+      if (decodedToken.sub !== userId) {
+        client.emit("authenticated", {
+          success: false,
+          message: "Token and userId mismatch",
         });
         return;
       }
@@ -127,9 +130,7 @@ export class NotificationsGateway
 
       client.join(`user_${userId}`);
 
-      this.logger.log(
-        `User ${userId} authenticated with JWT and joined room (${client.id})`
-      );
+      this.logger.log(`User ${userId} authenticated and joined room`);
 
       client.emit("authenticated", {
         success: true,
@@ -140,8 +141,9 @@ export class NotificationsGateway
       this.logger.error(
         `Authentication failed for client ${client.id}: ${error.message}`
       );
-      client.emit("authentication_failed", {
-        error: "Authentication failed",
+      client.emit("authenticated", {
+        success: false,
+        message: "Authentication failed",
       });
     }
   }
@@ -158,9 +160,13 @@ export class NotificationsGateway
 
       if (clientsInRoom && clientsInRoom.size > 0) {
         this.server.to(userRoom).emit("notification", notification);
-        this.logger.log(
-          `Notification sent to user ${userId} (${clientsInRoom.size} clients)`
-        );
+        this.logger.log(`Notification sent to user ${userId}`);
+
+        // Also send to connected user directly if available
+        const userSocket = this.connectedUsers.get(userId);
+        if (userSocket) {
+          userSocket.emit("notification", notification);
+        }
       } else {
         this.logger.warn(`No active connections for user ${userId}`);
       }

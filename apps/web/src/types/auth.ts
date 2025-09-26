@@ -27,14 +27,12 @@ export interface RefreshRequest {
   refreshToken: string
 }
 
-// 📚 LEARNING: Auth context state interface
 export interface AuthState {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
 }
 
-// 📚 LEARNING: Auth context actions interface
 export interface AuthActions {
   login: (credentials: LoginRequest) => Promise<void>
   register: (data: RegisterRequest) => Promise<void>

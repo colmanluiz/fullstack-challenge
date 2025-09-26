@@ -4,6 +4,7 @@ import {
   type LoginRequest,
   type RegisterRequest,
   type RefreshRequest,
+  type User,
 } from '../types/auth'
 
 export const authApi = {
@@ -24,6 +25,11 @@ export const authApi = {
 
   async logout(refreshToken: string): Promise<void> {
     await apiClient.post('/auth/logout', { refreshToken })
+  },
+
+  async getCurrentUser(): Promise<User> {
+    const response = await apiClient.get('/users/me')
+    return response.data
   },
 }
 

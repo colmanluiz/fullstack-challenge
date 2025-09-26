@@ -1,6 +1,7 @@
 import { Link, createLazyFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { getColumns } from '@/components/tasks/components/columns'
@@ -21,9 +22,7 @@ function TasksPage() {
   const fetchTasks = async () => {
     try {
       setIsLoading(true)
-      console.log('🔄 Fetching tasks...')
       const response = await taskApi.getTasks(1, 50) // Get first 50 tasks
-      console.log('📦 API Response:', response)
 
       // Handle different response structures
       let tasksData: Array<Task> = []
@@ -34,15 +33,16 @@ function TasksPage() {
         // If response has data property (actual API structure)
         tasksData = response.data
       } else {
-        console.warn('⚠️ Unexpected API response structure:', response)
+        console.warn('Unexpected API response structure:', response)
         tasksData = []
       }
 
       setTasks(tasksData)
-      console.log('✅ Tasks loaded:', tasksData.length)
+      setError(null) // Clear any previous errors
     } catch (err) {
-      console.error('❌ Failed to fetch tasks:', err)
+      console.error('Failed to fetch tasks:', err)
       setError('Failed to load tasks. Please try again.')
+      toast.error('Failed to load tasks')
     } finally {
       setIsLoading(false)
     }

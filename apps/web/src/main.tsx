@@ -11,6 +11,7 @@ import { routeTree } from './routeTree.gen'
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
 import { ThemeProvider } from './components/theme-provider.tsx'
+import { Toaster } from '@/components/ui/sonner.tsx'
 
 // Create a new router instance
 
@@ -43,6 +44,7 @@ if (rootElement && !rootElement.innerHTML) {
         <ThemeProvider>
           <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
             <RouterProvider router={router} />
+            <Toaster />
           </TanStackQueryProvider.Provider>
         </ThemeProvider>
       </AuthProvider>

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, Param, Query, UseGuards, Request } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -23,6 +23,15 @@ export class UsersController {
     @Query("limit") limit: number = 10
   ) {
     return this.usersService.getUsers(page, limit);
+  }
+
+  @Get("me")
+  @ApiOperation({ summary: "Get current user" })
+  @ApiResponse({ status: 200, description: "Current user retrieved successfully" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  async getCurrentUser(@Request() req: any) {
+    const userId = req.user?.id;
+    return this.usersService.getCurrentUser(userId);
   }
 
   @Get(":id")

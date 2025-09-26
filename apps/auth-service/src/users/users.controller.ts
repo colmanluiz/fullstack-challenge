@@ -17,4 +17,9 @@ export class UsersController {
   async getUserById(@Payload() data: { userId: string }) {
     return await this.usersService.getUserById(data.userId);
   }
+
+  @MessagePattern("get_current_user")
+  async getCurrentUser(@Payload() data: { userId: string }) {
+    return await this.usersService.getUserById(data.userId);
+  }
 }
