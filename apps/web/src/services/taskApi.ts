@@ -6,13 +6,15 @@ import {
   type Comment,
   type CreateCommentRequest,
   type TaskHistory,
+  type CreateTaskAssignmentRequest,
+  type TaskAssignment,
 } from '../types/task'
 
 export const taskApi = {
   async getTasks(
     page: number = 1,
     limit: number = 10,
-  ): Promise<{ tasks: Array<Task>; total: number }> {
+  ): Promise<{ data: Array<Task>; meta: { total: number; page: number; limit: number; totalPages: number } }> {
     const response = await apiClient.get(`/tasks?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -45,6 +47,16 @@ export const taskApi = {
     const response = await apiClient.post(`/tasks/${data.taskId}/comments`, {
       content: data.content,
     })
+    return response.data
+  },
+
+  async createTaskAssignment(
+    data: CreateTaskAssignmentRequest,
+  ): Promise<TaskAssignment> {
+    const response = await apiClient.post(`/tasks/${data.taskId}/assign`, {
+      userId: data.userId,
+    })
+
     return response.data
   },
 

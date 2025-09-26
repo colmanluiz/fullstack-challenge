@@ -1,7 +1,7 @@
 'use client'
 
 import { type Row } from '@tanstack/react-table'
-import { MoreHorizontal, Edit, Eye, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Edit, Eye, Trash2, UserPlus } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
@@ -19,20 +19,24 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { taskStatuses, taskPriorities } from './task-data'
+import { AssignUserDialog } from '../AssignUserDialog'
 
 import type { Task } from '@/types/task'
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>
+  onTaskUpdate?: () => void
 }
 
 export function DataTableRowActions<TData>({
   row,
+  onTaskUpdate,
 }: DataTableRowActionsProps<TData>) {
   const task = row.original as Task
 
   return (
-    <DropdownMenu>
+    <>
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -56,6 +60,20 @@ export function DataTableRowActions<TData>({
             Edit
           </DropdownMenuItem>
         </Link>
+        <DropdownMenuItem
+          className="gap-2"
+          onSelect={(event) => {
+            event.preventDefault()
+            // Trigger the dialog programmatically
+            const dialog = document.querySelector('[data-dialog-trigger="assign-users"]') as HTMLButtonElement
+            if (dialog) {
+              dialog.click()
+            }
+          }}
+        >
+          <UserPlus className="h-4 w-4" />
+          Assign Users
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
@@ -95,5 +113,19 @@ export function DataTableRowActions<TData>({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+      {/* Hidden dialog trigger */}
+      <AssignUserDialog
+        task={task}
+        onTaskUpdate={onTaskUpdate}
+        trigger={
+          <Button
+            data-dialog-trigger="assign-users"
+            className="hidden"
+            aria-hidden="true"
+          />
+        }
+      />
+    </>
   )
 }

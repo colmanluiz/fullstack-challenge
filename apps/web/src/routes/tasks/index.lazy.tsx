@@ -1,15 +1,15 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createLazyFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { columns } from '@/components/tasks/components/columns'
+import { getColumns } from '@/components/tasks/components/columns'
 import { DataTable } from '@/components/tasks/components/data-table'
 import { taskApi } from '@/services/taskApi'
 
 import type { Task } from '@/types/task'
 
-export const Route = createFileRoute('/tasks/')({
+export const Route = createLazyFileRoute('/tasks/')({
   component: TasksPage,
 })
 
@@ -18,40 +18,37 @@ function TasksPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setIsLoading(true)
-        console.log('🔄 Fetching tasks...')
-        const response = await taskApi.getTasks(1, 50) // Get first 50 tasks
-        console.log('📦 API Response:', response)
+  const fetchTasks = async () => {
+    try {
+      setIsLoading(true)
+      console.log('🔄 Fetching tasks...')
+      const response = await taskApi.getTasks(1, 50) // Get first 50 tasks
+      console.log('📦 API Response:', response)
 
-        // Handle different response structures
-        let tasksData: Array<Task> = []
-        if (Array.isArray(response)) {
-          // If response is directly an array
-          tasksData = response
-        } else if (response && Array.isArray(response.tasks)) {
-          // If response has tasks property
-          tasksData = response.tasks
-        } else if (response && Array.isArray(response.data)) {
-          // If response has data property
-          tasksData = response.data
-        } else {
-          console.warn('⚠️ Unexpected API response structure:', response)
-          tasksData = []
-        }
-
-        setTasks(tasksData)
-        console.log('✅ Tasks loaded:', tasksData.length)
-      } catch (err) {
-        console.error('❌ Failed to fetch tasks:', err)
-        setError('Failed to load tasks. Please try again.')
-      } finally {
-        setIsLoading(false)
+      // Handle different response structures
+      let tasksData: Array<Task> = []
+      if (Array.isArray(response)) {
+        // If response is directly an array
+        tasksData = response
+      } else if (response && Array.isArray(response.data)) {
+        // If response has data property (actual API structure)
+        tasksData = response.data
+      } else {
+        console.warn('⚠️ Unexpected API response structure:', response)
+        tasksData = []
       }
-    }
 
+      setTasks(tasksData)
+      console.log('✅ Tasks loaded:', tasksData.length)
+    } catch (err) {
+      console.error('❌ Failed to fetch tasks:', err)
+      setError('Failed to load tasks. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchTasks()
   }, [])
 
@@ -65,14 +62,6 @@ function TasksPage() {
               Welcome back!
             </h2>
             <p className="text-muted-foreground">Loading your tasks...</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/tasks/new">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Task
-              </Button>
-            </Link>
           </div>
         </div>
         <div className="flex items-center justify-center p-8">
@@ -95,14 +84,6 @@ function TasksPage() {
             <p className="text-muted-foreground">
               There was an issue loading your tasks.
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/tasks/new">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Task
-              </Button>
-            </Link>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center p-8 text-center">
@@ -131,14 +112,6 @@ function TasksPage() {
               You don&apos;t have any tasks yet. Create your first task to get
               started.
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/tasks/new">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Task
-              </Button>
-            </Link>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -172,16 +145,8 @@ function TasksPage() {
             {tasks.length > 0 && ` (${tasks.length} total)`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link to="/tasks/new">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Task
-            </Button>
-          </Link>
-        </div>
       </div>
-      <DataTable data={tasks} columns={columns} />
+      <DataTable data={tasks} columns={getColumns(fetchTasks)} />
     </div>
   )
 }

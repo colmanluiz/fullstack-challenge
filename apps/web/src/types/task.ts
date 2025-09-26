@@ -1,3 +1,9 @@
+export interface TaskAssignee {
+  id: string
+  username: string
+  email?: string
+}
+
 export interface Task {
   id: string
   title: string
@@ -5,7 +11,7 @@ export interface Task {
   deadline: string
   status: TaskStatus
   priority: TaskPriority
-  assignees: Array<string>
+  assignees: Array<TaskAssignee>
   createdBy: string
   createdAt: string
   updatedAt: string
@@ -49,6 +55,18 @@ export interface TaskHistory {
   previousValue: any
   newValue: any
   createdAt: string
+}
+
+export interface TaskAssignment {
+  id: string
+  taskId: string
+  userId: string
+  assignedAt: string
+}
+
+export interface CreateTaskAssignmentRequest {
+  taskId: string
+  userId: string
 }
 
 export enum TaskStatus {

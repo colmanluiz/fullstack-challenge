@@ -62,10 +62,26 @@ export class TasksService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: "DESC" },
+      relations: ["assignments"], // Include task assignments
     });
 
+    // Transform tasks to include assignees with user data
+    const tasksWithAssignees = await Promise.all(
+      tasks.map(async (task) => {
+        const userIds = task.assignments?.map(assignment => assignment.userId) || [];
+        const assignees = userIds.length > 0
+          ? await this.validationService.getUsersByIds(userIds)
+          : [];
+
+        return {
+          ...task,
+          assignees,
+        };
+      })
+    );
+
     return {
-      data: tasks,
+      data: tasksWithAssignees,
       meta: {
         total: tasksCount,
         page,
@@ -80,6 +96,9 @@ export class TasksService {
 
     if (includeRelations) {
       options.relations = ["assignments", "comments", "history"];
+    } else {
+      // Always include assignments for assignees data
+      options.relations = ["assignments"];
     }
 
     const task = await this.taskRepository.findOne(options);
@@ -88,7 +107,16 @@ export class TasksService {
       throw new TaskNotFoundException(id);
     }
 
-    return task;
+    // Add assignees with user data to the response
+    const userIds = task.assignments?.map(assignment => assignment.userId) || [];
+    const assignees = userIds.length > 0
+      ? await this.validationService.getUsersByIds(userIds)
+      : [];
+
+    return {
+      ...task,
+      assignees,
+    };
   }
 
   async updateTask(

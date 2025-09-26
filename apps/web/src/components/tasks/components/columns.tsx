@@ -9,10 +9,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { taskStatuses, taskPriorities } from './task-data'
 import { DataTableColumnHeader } from './data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
+import { SimpleAssigneeDisplay } from '../SimpleAssigneeDisplay'
 
 import type { Task } from '@/types/task'
 
-export const columns: ColumnDef<Task>[] = [
+export const getColumns = (onTaskUpdate?: () => void): ColumnDef<Task>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -118,37 +119,6 @@ export const columns: ColumnDef<Task>[] = [
     },
   },
   {
-    accessorKey: 'assignees',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Assignees" />
-    ),
-    cell: ({ row }) => {
-      const assignees = row.getValue('assignees') as Array<string>
-
-      if (!assignees || assignees.length === 0) {
-        return (
-          <span className="text-muted-foreground text-sm">Unassigned</span>
-        )
-      }
-
-      return (
-        <div className="flex items-center gap-1">
-          {assignees.slice(0, 3).map((assignee) => (
-            <Badge key={assignee} variant="secondary" className="text-xs">
-              {assignee}
-            </Badge>
-          ))}
-          {assignees.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{assignees.length - 3}
-            </Badge>
-          )}
-        </div>
-      )
-    },
-    enableSorting: false,
-  },
-  {
     accessorKey: 'deadline',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Deadline" />
@@ -199,7 +169,20 @@ export const columns: ColumnDef<Task>[] = [
     },
   },
   {
+    accessorKey: 'assignees',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Assignees" />
+    ),
+    cell: ({ row }) => {
+      const task = row.original as Task
+      return <SimpleAssigneeDisplay assignees={task.assignees || []} maxDisplay={2} />
+    },
+  },
+  {
     id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => <DataTableRowActions row={row} onTaskUpdate={onTaskUpdate} />,
   },
 ]
+
+// Backward compatibility export
+export const columns = getColumns()

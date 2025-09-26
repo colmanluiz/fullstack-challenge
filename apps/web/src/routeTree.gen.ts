@@ -8,15 +8,18 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TasksIndexRouteImport } from './routes/tasks/index'
 import { Route as TasksNewRouteImport } from './routes/tasks/new'
 import { Route as TasksIdIndexRouteImport } from './routes/tasks/$id/index'
 import { Route as TasksIdEditRouteImport } from './routes/tasks/$id/edit'
+
+const TasksIndexLazyRouteImport = createFileRoute('/tasks/')()
 
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
@@ -38,11 +41,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TasksIndexRoute = TasksIndexRouteImport.update({
+const TasksIndexLazyRoute = TasksIndexLazyRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => TasksRoute,
-} as any)
+} as any).lazy(() => import('./routes/tasks/index.lazy').then((d) => d.Route))
 const TasksNewRoute = TasksNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -65,7 +68,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
-  '/tasks/': typeof TasksIndexRoute
+  '/tasks/': typeof TasksIndexLazyRoute
   '/tasks/$id/edit': typeof TasksIdEditRoute
   '/tasks/$id': typeof TasksIdIndexRoute
 }
@@ -74,7 +77,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/tasks/new': typeof TasksNewRoute
-  '/tasks': typeof TasksIndexRoute
+  '/tasks': typeof TasksIndexLazyRoute
   '/tasks/$id/edit': typeof TasksIdEditRoute
   '/tasks/$id': typeof TasksIdIndexRoute
 }
@@ -85,7 +88,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
-  '/tasks/': typeof TasksIndexRoute
+  '/tasks/': typeof TasksIndexLazyRoute
   '/tasks/$id/edit': typeof TasksIdEditRoute
   '/tasks/$id/': typeof TasksIdIndexRoute
 }
@@ -162,7 +165,7 @@ declare module '@tanstack/react-router' {
       id: '/tasks/'
       path: '/'
       fullPath: '/tasks/'
-      preLoaderRoute: typeof TasksIndexRouteImport
+      preLoaderRoute: typeof TasksIndexLazyRouteImport
       parentRoute: typeof TasksRoute
     }
     '/tasks/new': {
@@ -191,14 +194,14 @@ declare module '@tanstack/react-router' {
 
 interface TasksRouteChildren {
   TasksNewRoute: typeof TasksNewRoute
-  TasksIndexRoute: typeof TasksIndexRoute
+  TasksIndexLazyRoute: typeof TasksIndexLazyRoute
   TasksIdEditRoute: typeof TasksIdEditRoute
   TasksIdIndexRoute: typeof TasksIdIndexRoute
 }
 
 const TasksRouteChildren: TasksRouteChildren = {
   TasksNewRoute: TasksNewRoute,
-  TasksIndexRoute: TasksIndexRoute,
+  TasksIndexLazyRoute: TasksIndexLazyRoute,
   TasksIdEditRoute: TasksIdEditRoute,
   TasksIdIndexRoute: TasksIdIndexRoute,
 }

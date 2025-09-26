@@ -8,6 +8,7 @@ import { AuthModule } from "./auth/auth.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { CommentsModule } from "./comments/comments.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
     TasksModule,
     CommentsModule,
     NotificationsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [

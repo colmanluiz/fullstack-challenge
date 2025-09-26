@@ -30,6 +30,8 @@ import { type Task, TASK_STATUSES, TASK_PRIORITIES, TaskStatus } from '@/types/t
 import { AddCommentForm } from '@/components/tasks/AddCommentForm'
 import { CommentsList } from '@/components/tasks/CommentsList'
 import { TaskHistory } from '@/components/tasks/TaskHistory'
+import { SimpleAssigneeDisplay } from '@/components/tasks/SimpleAssigneeDisplay'
+import { AssignUserDialog } from '@/components/tasks/AssignUserDialog'
 
 export const Route = createFileRoute('/tasks/$id/')({
   component: TaskDetailPage,
@@ -47,22 +49,22 @@ function TaskDetailPage() {
   const [isCompleting, setIsCompleting] = useState(false)
 
   // later, we'll replace this with TanStack Query
-  useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        setIsLoading(true)
-        console.log('🔄 Fetching task details:', id)
-        const taskData = await taskApi.getTask(id)
-        setTask(taskData)
-        console.log('✅ Task loaded:', taskData.title)
-      } catch (err) {
-        console.error('❌ Failed to fetch task:', err)
-        setError('Failed to load task. Please try again.')
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchTask = async () => {
+    try {
+      setIsLoading(true)
+      console.log('🔄 Fetching task details:', id)
+      const taskData = await taskApi.getTask(id)
+      setTask(taskData)
+      console.log('✅ Task loaded:', taskData.title)
+    } catch (err) {
+      console.error('❌ Failed to fetch task:', err)
+      setError('Failed to load task. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchTask()
   }, [id])
 
@@ -210,6 +212,9 @@ function TaskDetailPage() {
               </Button>
             </Link>
 
+            {/* Assign Users Button */}
+            <AssignUserDialog task={task} onTaskUpdate={fetchTask} />
+
             {/* Delete Button with Confirmation */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -328,18 +333,12 @@ function TaskDetailPage() {
               {/* Assignees */}
               <div>
                 <h4 className="font-semibold mb-2">Assignees</h4>
-                {task.assignees && task.assignees.length > 0 ? (
-                  <div className="space-y-2">
-                    {task.assignees.map((assigneeId) => (
-                      <div key={assigneeId} className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{assigneeId}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No assignees</p>
-                )}
+                <SimpleAssigneeDisplay
+                  assignees={task.assignees || []}
+                  maxDisplay={10}
+                  variant="outline"
+                  size="default"
+                />
               </div>
             </div>
           </CardContent>
