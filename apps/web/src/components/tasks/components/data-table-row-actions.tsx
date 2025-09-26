@@ -1,7 +1,7 @@
 'use client'
 
 import { type Row } from '@tanstack/react-table'
-import { MoreHorizontal, Edit, Eye } from 'lucide-react'
+import { MoreHorizontal, Edit, Eye, Trash2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
@@ -18,9 +18,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { taskStatuses, taskPriorities } from './task-data'
 
-import { labels } from '../data/data'
-import { taskSchema } from '../data/schema'
+import type { Task } from '@/types/task'
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>
@@ -29,7 +29,7 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
-  const task = taskSchema.parse(row.original)
+  const task = row.original as Task
 
   return (
     <DropdownMenu>
@@ -56,22 +56,40 @@ export function DataTableRowActions<TData>({
             Edit
           </DropdownMenuItem>
         </Link>
-        <DropdownMenuItem>Make a copy</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={task.label}>
-              {labels.map((label) => (
-                <DropdownMenuRadioItem key={label.value} value={label.value}>
-                  {label.label}
+            <DropdownMenuRadioGroup value={task.status}>
+              {taskStatuses.map((status) => (
+                <DropdownMenuRadioItem key={status.value} value={status.value}>
+                  <div className="flex items-center gap-2">
+                    {status.icon && <status.icon className="h-4 w-4" />}
+                    {status.label}
+                  </div>
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>Priority</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup value={task.priority}>
+              {taskPriorities.map((priority) => (
+                <DropdownMenuRadioItem key={priority.value} value={priority.value}>
+                  <div className="flex items-center gap-2">
+                    {priority.icon && <priority.icon className="h-4 w-4" />}
+                    {priority.label}
+                  </div>
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive">
+        <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
+          <Trash2 className="h-4 w-4" />
           Delete
           <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
         </DropdownMenuItem>

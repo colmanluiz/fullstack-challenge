@@ -1,13 +1,14 @@
 'use client'
 
 import { type Table } from '@tanstack/react-table'
-import { X } from 'lucide-react'
+import { X, Plus } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from './data-table-view-options'
 
-import { priorities, statuses } from '../data/data'
+import { taskPriorities, taskStatuses } from './task-data'
 import { DataTableFacetedFilter } from './data-table-faceted-filter'
 
 interface DataTableToolbarProps<TData> {
@@ -34,14 +35,14 @@ export function DataTableToolbar<TData>({
           <DataTableFacetedFilter
             column={table.getColumn('status')}
             title="Status"
-            options={statuses}
+            options={taskStatuses}
           />
         )}
         {table.getColumn('priority') && (
           <DataTableFacetedFilter
             column={table.getColumn('priority')}
             title="Priority"
-            options={priorities}
+            options={taskPriorities}
           />
         )}
         {isFiltered && (
@@ -57,7 +58,12 @@ export function DataTableToolbar<TData>({
       </div>
       <div className="flex items-center gap-2">
         <DataTableViewOptions table={table} />
-        <Button size="sm">Add Task</Button>
+        <Link to="/tasks/new">
+          <Button size="sm" className="gap-1">
+            <Plus className="h-4 w-4" />
+            Add Task
+          </Button>
+        </Link>
       </div>
     </div>
   )
