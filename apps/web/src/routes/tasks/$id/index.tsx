@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Edit, ArrowLeft, Clock, User, Flag, Trash2, CheckCircle } from 'lucide-react'
+import { Edit, ArrowLeft, Clock, Flag, Trash2, CheckCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { SiteHeader } from '@/components/site-header'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +27,12 @@ import {
 } from '@/components/ui/alert-dialog'
 
 import { taskApi } from '@/services/taskApi'
-import { type Task, TASK_STATUSES, TASK_PRIORITIES, TaskStatus } from '@/types/task'
+import {
+  type Task,
+  TASK_STATUSES,
+  TASK_PRIORITIES,
+  TaskStatus,
+} from '@/types/task'
 import { AddCommentForm } from '@/components/tasks/AddCommentForm'
 import { CommentsList } from '@/components/tasks/CommentsList'
 import { TaskHistory } from '@/components/tasks/TaskHistory'
@@ -48,7 +54,6 @@ function TaskDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
 
-  // later, we'll replace this with TanStack Query
   const fetchTask = async () => {
     try {
       setIsLoading(true)
@@ -92,7 +97,7 @@ function TaskDetailPage() {
       setIsCompleting(true)
       console.log('✅ Marking task as complete:', task.title)
       const updatedTask = await taskApi.updateTask(task.id, {
-        status: TaskStatus.DONE
+        status: TaskStatus.DONE,
       })
       setTask(updatedTask)
       console.log('✅ Task marked as complete')
@@ -135,7 +140,6 @@ function TaskDetailPage() {
     )
   }
 
-  // Helper functions to get display values
   const getStatusDisplay = (status: string) => {
     return TASK_STATUSES.find((s) => s.value === status)?.label || status
   }
@@ -175,214 +179,217 @@ function TaskDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header with navigation */}
-        <div className="flex items-center justify-between">
-          <Link to="/tasks">
-            <Button variant="ghost" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Tasks
-            </Button>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            {/* Complete Task Button */}
-            {task.status !== TaskStatus.DONE && (
-              <Button
-                onClick={handleCompleteTask}
-                disabled={isCompleting}
-                variant="outline"
-                className="gap-2 text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700 hover:border-green-400"
-              >
-                {isCompleting ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                ) : (
-                  <CheckCircle className="h-4 w-4" />
-                )}
-                {isCompleting ? 'Completing...' : 'Mark Complete'}
-              </Button>
-            )}
-
-            {/* Edit Button */}
-            <Link to="/tasks/$id/edit" params={{ id: task.id }}>
-              <Button className="gap-2">
-                <Edit className="h-4 w-4" />
-                Edit Task
+    <>
+      <SiteHeader title={`Tasks / ${task?.title || 'Task Details'}`} />
+      <div className="container mx-auto py-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Navigation and action buttons */}
+          <div className="flex items-center justify-between">
+            <Link to="/tasks">
+              <Button variant="ghost" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Tasks
               </Button>
             </Link>
-
-            {/* Assign Users Button */}
-            <AssignUserDialog task={task} onTaskUpdate={fetchTask} />
-
-            {/* Delete Button with Confirmation */}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+            <div className="flex items-center gap-3">
+              {/* Complete Task Button */}
+              {task.status !== TaskStatus.DONE && (
                 <Button
+                  onClick={handleCompleteTask}
+                  disabled={isCompleting}
                   variant="outline"
-                  className="gap-2 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700 hover:border-red-400"
+                  className="gap-2 text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700 hover:border-green-400"
                 >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
+                  {isCompleting ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  {isCompleting ? 'Completing...' : 'Mark Complete'}
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Task</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{task.title}"? This action cannot be undone and will also remove all associated comments.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDeleteTask}
-                    disabled={isDeleting}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+              )}
+
+              {/* Edit Button */}
+              <Link to="/tasks/$id/edit" params={{ id: task.id }}>
+                <Button className="gap-2">
+                  <Edit className="h-4 w-4" />
+                  Edit Task
+                </Button>
+              </Link>
+
+              {/* Assign Users Button */}
+              <AssignUserDialog task={task} onTaskUpdate={fetchTask} />
+
+              {/* Delete Button with Confirmation */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="gap-2 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700 hover:border-red-400"
                   >
-                    {isDeleting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Deleting...
-                      </>
-                    ) : (
-                      'Delete Task'
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </div>
-
-        {/* Task details card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-2xl">{task.title}</CardTitle>
-                <CardDescription className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Created {new Date(task.createdAt).toLocaleDateString()}
-                </CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Badge className={getStatusColor(task.status)}>
-                  {getStatusDisplay(task.status)}
-                </Badge>
-                <Badge className={getPriorityColor(task.priority)}>
-                  <Flag className="h-3 w-3 mr-1" />
-                  {getPriorityDisplay(task.priority)}
-                </Badge>
-              </div>
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{task.title}"? This
+                      action cannot be undone and will also remove all
+                      associated comments.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteTask}
+                      disabled={isDeleting}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Deleting...
+                        </>
+                      ) : (
+                        'Delete Task'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Description */}
-            {task.description && (
-              <div>
-                <h4 className="font-semibold mb-2">Description</h4>
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {task.description}
-                </p>
+          </div>
+
+          {/* Task details card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-2xl">{task.title}</CardTitle>
+                  <CardDescription className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Created {new Date(task.createdAt).toLocaleDateString()}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Badge className={getStatusColor(task.status)}>
+                    {getStatusDisplay(task.status)}
+                  </Badge>
+                  <Badge className={getPriorityColor(task.priority)}>
+                    <Flag className="h-3 w-3 mr-1" />
+                    {getPriorityDisplay(task.priority)}
+                  </Badge>
+                </div>
               </div>
-            )}
-
-            <Separator />
-
-            {/* Task metadata */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Description */}
+              {task.description && (
                 <div>
-                  <h4 className="font-semibold mb-2">Details</h4>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex justify-between">
-                      <span>Status:</span>
-                      <Badge
-                        variant="outline"
-                        className={getStatusColor(task.status)}
-                      >
-                        {getStatusDisplay(task.status)}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Priority:</span>
-                      <Badge
-                        variant="outline"
-                        className={getPriorityColor(task.priority)}
-                      >
-                        {getPriorityDisplay(task.priority)}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Created:</span>
-                      <span>
-                        {new Date(task.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Updated:</span>
-                      <span>
-                        {new Date(task.updatedAt).toLocaleDateString()}
-                      </span>
+                  <h4 className="font-semibold mb-2">Description</h4>
+                  <p className="text-muted-foreground whitespace-pre-wrap">
+                    {task.description}
+                  </p>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Task metadata */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Details</h4>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Status:</span>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(task.status)}
+                        >
+                          {getStatusDisplay(task.status)}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Priority:</span>
+                        <Badge
+                          variant="outline"
+                          className={getPriorityColor(task.priority)}
+                        >
+                          {getPriorityDisplay(task.priority)}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Created:</span>
+                        <span>
+                          {new Date(task.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Updated:</span>
+                        <span>
+                          {new Date(task.updatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Assignees */}
+                <div>
+                  <h4 className="font-semibold mb-2">Assignees</h4>
+                  <SimpleAssigneeDisplay
+                    assignees={task.assignees || []}
+                    maxDisplay={10}
+                    variant="outline"
+                    size="default"
+                  />
+                </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Assignees */}
-              <div>
-                <h4 className="font-semibold mb-2">Assignees</h4>
-                <SimpleAssigneeDisplay
-                  assignees={task.assignees || []}
-                  maxDisplay={10}
-                  variant="outline"
-                  size="default"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Comments section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Comments
+                {commentsCount > 0 && (
+                  <Badge variant="secondary" className="h-5 px-2 text-xs">
+                    {commentsCount}
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Collaborate on this task with your team
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Add comment form */}
+              <AddCommentForm
+                taskId={id}
+                onCommentAdded={() => {
+                  setCommentsListKey((prev) => prev + 1)
+                }}
+              />
 
-        {/* Comments section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Comments
-              {commentsCount > 0 && (
-                <Badge variant="secondary" className="h-5 px-2 text-xs">
-                  {commentsCount}
-                </Badge>
-              )}
-            </CardTitle>
-            <CardDescription>
-              Collaborate on this task with your team
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Add comment form */}
-            <AddCommentForm
-              taskId={id}
-              onCommentAdded={() => {
-                // Refresh comments list when a new comment is added
-                setCommentsListKey((prev) => prev + 1)
-              }}
-            />
+              <Separator />
 
-            <Separator />
+              {/* Comments list */}
+              <CommentsList
+                key={commentsListKey}
+                taskId={id}
+                onCommentsLoad={(count) => setCommentsCount(count)}
+              />
+            </CardContent>
+          </Card>
 
-            {/* Comments list */}
-            <CommentsList
-              key={commentsListKey}
-              taskId={id}
-              onCommentsLoad={(count) => setCommentsCount(count)}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Task History section */}
-        <TaskHistory taskId={id} />
+          {/* Task History section */}
+          <TaskHistory taskId={id} />
+        </div>
       </div>
-    </div>
+    </>
   )
 }
