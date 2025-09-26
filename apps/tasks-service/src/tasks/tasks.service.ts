@@ -202,7 +202,11 @@ export class TasksService {
     const savedAssignment =
       await this.taskAssignmentRepository.save(newTaskAssignment);
 
-    this.eventsService;
+    this.eventsService.publishTaskAssigned(
+      taskId,
+      userId,
+      new Date().toISOString()
+    );
 
     return savedAssignment;
   }

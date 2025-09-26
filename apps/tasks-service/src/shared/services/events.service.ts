@@ -7,6 +7,7 @@ import {
   TaskCreatedEventDto,
   TaskUpdatedEventDto,
   CommentCreatedEventDto,
+  TaskAssignedEventDto,
 } from "@task-management/types";
 
 @Injectable()
@@ -75,5 +76,19 @@ export class EventsService {
     };
 
     this.eventsClient.emit("comment.created", eventPayload);
+  }
+
+  publishTaskAssigned(
+    taskId: string,
+    userId: string,
+    assignedAt: string
+  ): void {
+    const eventPayload: TaskAssignedEventDto = {
+      taskId,
+      userId,
+      assignedAt,
+    };
+
+    this.eventsClient.emit("task.assigned", eventPayload);
   }
 }
